@@ -493,6 +493,10 @@
         const uploadFieldset = document.getElementById('upload-fieldset');
         const downloadFieldset = document.getElementById('download-fieldset');
 
+        // FORCE default 1 MB selection
+        uploadFieldset.querySelector('#mb1-upload').checked = true;
+        downloadFieldset.querySelector('#mb1-download').checked = true;
+
         setCustomValueFromParam(uploadFieldset, urlParams.get('upload_bytes'));
         setCustomValueFromParam(downloadFieldset, urlParams.get('download_bytes'));
 
