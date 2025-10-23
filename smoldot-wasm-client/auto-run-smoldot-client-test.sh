@@ -22,7 +22,7 @@ if ! command -v wasm-pack >/dev/null 2>&1; then
   }
 fi
 rm -f Cargo.lock
-cargo run --bin smoldot-wasm-build
+wasm-pack build --target web --out-dir pkg
 
 echo "[2/4] Starting libp2p server (WebRTC)"
 cd "$LIBP2P_DIR"

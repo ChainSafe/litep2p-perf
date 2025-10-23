@@ -7,12 +7,16 @@ use web_sys::console;
 pub const PROTOCOL_NAME: &str = "/litep2p-perf/1.0.0";
 
 pub(crate) struct PerfStream {
+    upload_bytes: u64,
+    download_bytes: u64,
     inner: PerfStreamInner
 }
 
 impl PerfStream {
-    pub fn new() -> Self {
+    pub fn new(upload_bytes: u64, download_bytes: u64) -> Self {
         Self {
+            upload_bytes,
+            download_bytes,
             inner: PerfStreamInner::new(),
         }
     }
@@ -21,7 +25,12 @@ impl PerfStream {
         self,
         read_write: &mut ReadWrite<Instant>,
     ) -> Option<Self> {
+        let upload_bytes = self.upload_bytes;
+        let download_bytes = self.download_bytes;
+
         self.read_write2(read_write).map(|inner| PerfStream {
+            upload_bytes,
+            download_bytes,
             inner,
         })
     }
@@ -39,46 +48,84 @@ impl PerfStream {
                         Some(Negotiating(nego)),
                     Ok(multistream_select::Negotiation::Success) => {
                         console::log_1(&"PerfStream::read_write2(): done negotiating!".into());
-                        // read_write.wake_up_asap();
+                        read_write.wake_up_asap();
                         Some(PerfStreamInner::NumberOfBytesUpload)
                     },
                     Ok(multistream_select::Negotiation::NotAvailable) => None, // log?
-                    Err(_) => None, // FIXME: handle error
+                    Err(err) => {
+                        console::log_1(&format!("kaput: {:?}", err).into());
+                        None
+                    },
                     _ => unreachable!("probably...")
                 }
             }
             PerfStreamInner::NumberOfBytesUpload => {
                 console::log_1(&"PerfStream::read_write2(): sending number of bytes, upload".into());
-                let num_bytes = 1024_u64; // FIXME: make configurable
-                read_write.write_out(Vec::from(num_bytes.to_be_bytes()));
+                read_write.write_out(Vec::from(self.upload_bytes.to_be_bytes()));
                 read_write.wake_up_asap();
-                Some(PerfStreamInner::BytesUpload)
+                Some(PerfStreamInner::BytesUpload(self.upload_bytes))
             },
-            PerfStreamInner::BytesUpload => {
-                console::log_1(&"PerfStream::read_write2(): sending bytes, upload".into());
-                read_write.write_out(vec![0u8; 1024]);
+            PerfStreamInner::BytesUpload(expected_bytes) => {
+                if expected_bytes == self.upload_bytes {
+                    console::log_1(&format!(
+                        "PerfStream::read_write2(): starting upload of {} bytes",
+                        self.upload_bytes,
+                    ).into());
+                }
+
+                let chunk_size: usize = match read_write.write_bytes_queueable {
+                    Some(wbq) => {
+                        if wbq == 0 {
+                            console::log_1(&"PerfStream::read_write2(): zero bytes queueable".into());
+                            return Some(PerfStreamInner::BytesUpload(expected_bytes));
+                        }
+                        std::cmp::min(wbq, 1024)
+                    },
+                    None => {
+                        console::log_1(&"PerfStream::read_write2(): no bytes queueable".into());
+                        return None;
+                    }
+                };
+
+                read_write.write_out(vec![0u8; chunk_size]);
                 read_write.wake_up_asap();
-                Some(PerfStreamInner::NumberOfBytesDownload)
+
+                let remaining_bytes = expected_bytes.saturating_sub(chunk_size as u64);
+                if remaining_bytes > 0 {
+                    Some(PerfStreamInner::BytesUpload(remaining_bytes))
+                } else {
+                    console::log_1(&"PerfStream::read_write2(): done uploading".into());
+                    Some(PerfStreamInner::NumberOfBytesDownload)
+                }
             },
             PerfStreamInner::NumberOfBytesDownload => {
                 console::log_1(&"PerfStream::read_write2(): sending number of bytes, download".into());
-                let num_bytes = 1024_u64; // FIXME: make configurable
-                read_write.write_out(Vec::from(num_bytes.to_be_bytes()));
+                read_write.write_out(Vec::from(self.download_bytes.to_be_bytes()));
 
-                // This causes WebRtcFraming to include the FIN flag in the outgoing message.
-                read_write.write_bytes_queueable = None;
+                // FIXME: Including this breaks receiving the download bytes.
+                // It should mean that this side won't send any more data, but the libp2p remote
+                // seems to interpret it as "substream closed".
+                // This should cause WebRtcFraming to include the FIN flag in the outgoing message.
+                // read_write.write_bytes_queueable = None;
 
-                Some(PerfStreamInner::BytesDownload)
+                Some(PerfStreamInner::BytesDownload(self.download_bytes))
             },
-            PerfStreamInner::BytesDownload => {
-                console::log_1(&"PerfStream::read_write2(): receiving bytes, download".into());
-                if read_write.incoming_buffer.len() != 1024 {
+            PerfStreamInner::BytesDownload(expected_bytes) => {
+                if expected_bytes == self.download_bytes {
                     console::log_1(&format!(
-                        "PerfStream::read_write2(): expected 1024 bytes in incoming_buffer but got {}",
-                        read_write.incoming_buffer.len(),
+                        "PerfStream::read_write2(): starting download of {} bytes",
+                        self.download_bytes,
                     ).into());
                 }
-                None
+
+                let remaining_bytes = expected_bytes.saturating_sub(read_write.incoming_buffer.len() as u64);
+                if remaining_bytes > 0 {
+                    read_write.discard_all_incoming();
+                    Some(PerfStreamInner::BytesDownload(remaining_bytes))
+                } else {
+                    console::log_1(&"PerfStream::read_write2(): done downloading".into());
+                    None
+                }
             },
         }
     }
@@ -87,9 +134,9 @@ impl PerfStream {
 enum PerfStreamInner {
     Negotiating(multistream_select::InProgress<String>),
     NumberOfBytesUpload,
-    BytesUpload,
+    BytesUpload(u64),
     NumberOfBytesDownload,
-    BytesDownload,
+    BytesDownload(u64),
 }
 
 impl PerfStreamInner {
