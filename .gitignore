@@ -3,4 +3,4 @@ libp2p/target
 utils/target
 /target
 ./.idea
-./smoldot-wasm-client/target
+smoldot-wasm-client/target
