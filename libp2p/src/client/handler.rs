@@ -1,3 +1,4 @@
+use core::panic;
 use std::{
     collections::VecDeque,
     task::{Context, Poll},
@@ -95,7 +96,10 @@ impl ConnectionHandler for Handler {
             #[allow(unreachable_patterns)]
             ConnectionEvent::FullyNegotiatedInbound(FullyNegotiatedInbound {
                 protocol, ..
-            }) => void::unreachable(protocol),
+            }) => panic!(
+                "Unexpected FullyNegotiatedInbound event in server handler: {:?}",
+                protocol
+            ),
             ConnectionEvent::FullyNegotiatedOutbound(FullyNegotiatedOutbound {
                 protocol,
                 info: (),
@@ -135,7 +139,10 @@ impl ConnectionHandler for Handler {
             // TODO: remove when Rust 1.82 is MSRV
             #[allow(unreachable_patterns)]
             ConnectionEvent::ListenUpgradeError(ListenUpgradeError { info: (), error }) => {
-                void::unreachable(error)
+                panic!(
+                    "ListenUpgradeError should not occur in this context: {:?}",
+                    error
+                );
             }
             _ => {}
         }

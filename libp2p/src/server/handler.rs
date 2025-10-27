@@ -85,7 +85,10 @@ impl ConnectionHandler for Handler {
             // TODO: remove when Rust 1.82 is MSRV
             #[allow(unreachable_patterns)]
             ConnectionEvent::ListenUpgradeError(ListenUpgradeError { info: (), error }) => {
-                void::unreachable(error)
+                panic!(
+                    "ListenUpgradeError should not occur in this context: {:?}",
+                    error
+                );
             }
             _ => {}
         }
