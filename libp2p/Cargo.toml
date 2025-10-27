@@ -15,13 +15,15 @@ thiserror = "1.0"
 futures-bounded = "0.2.4"
 
 
-libp2p = { version = "0.54.1", features = ["dns", "identify", "kad", "macros", "mdns", "noise", "ping", "tcp",  "tokio", "yamux", "websocket", "request-response"] }
-libp2p-core = { version = "0.42" }
-libp2p-swarm = { version = "0.45.1" }
-libp2p-identity = { version = "0.2.9", features = ["ed25519", "peerid", "rand"] }
-libp2p-tls = "0.5.0"
-libp2p-noise = "0.45.0"
-libp2p-yamux = "0.46.0"
+libp2p = { version = "0.56.0", features = ["dns", "identify", "kad", "macros", "mdns", "noise", "ping", "tcp",  "tokio", "yamux", "websocket", "request-response"] }
+libp2p-core = { version = "0.43.1" }
+libp2p-swarm = { version = "0.47.0" }
+libp2p-identity = { version = "0.2.12", features = ["ed25519", "peerid", "rand"] }
+libp2p-tls = "0.6.2"
+libp2p-noise = "0.46.1"
+libp2p-webrtc = { version = "0.9.0-alpha.1", features = ["tokio"] }
+libp2p-yamux = "0.47.0"
 void = "1"
 
 utils = { path = "../utils" }
+rand = "0.8"

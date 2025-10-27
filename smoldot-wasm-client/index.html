@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Smoldot WebRTC WASM Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #main-controls {
+            width: fit-content;
+            margin-bottom: 20px;
+        }
+        #selectors-container {
+            display: flex;
+            gap: 20px;
+        }
+        fieldset {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            width: 300px;
+        }
+        legend {
+            font-weight: bold;
+            padding: 0 5px;
+        }
+        div {
+            margin-bottom: 10px;
+        }
+        #controls-container {
+            display: flex;
+            width: 100%;
+            margin-top: 20px;
+        }
+        #peerAddress {
+            flex-grow: 1;
+            min-width: 0;
+            margin-right: 10px;
+            font-size: 16px;
+            padding: 10px;
+        }
+        label {
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        .customBytesInput {
+            margin-left: 5px;
+            width: 100px;
+        }
+        button {
+            margin-right: 10px;
+        }
+        #output {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            min-height: 100px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+<h1>Smoldot WebRTC WASM litep2p-perf Client</h1>
+
+<div id="main-controls">
+    <div id="selectors-container">
+        <fieldset id="upload-fieldset" class="byte-selector">
+            <legend>Upload</legend>
+
+            <div>
+                <input type="radio" id="kb1-upload" name="bytes-upload" checked value="1024">
+                <label for="kb1-upload">1 KB</label>
+            </div>
+            <div>
+                <input type="radio" id="mb1-upload" name="bytes-upload" value="1048576">
+                <label for="mb1-upload">1 MB</label>
+            </div>
+            <div>
+                <input type="radio" id="gb1-upload" name="bytes-upload" value="1073741824">
+                <label for="gb1-upload">1 GB</label>
+            </div>
+            <div>
+                <input type="radio" id="custom-upload" name="bytes-upload" value="custom">
+                <label for="custom-upload">Custom:</label>
+                <input type="number" id="customBytes-upload" name="customBytesValue-upload" class="customBytesInput" placeholder="Enter bytes">
+            </div>
+        </fieldset>
+
+        <fieldset id="download-fieldset" class="byte-selector">
+            <legend>Download</legend>
+
+            <div>
+                <input type="radio" id="kb1-download" name="bytes-download" checked value="1024">
+                <label for="kb1-download">1 KB</label>
+            </div>
+            <div>
+                <input type="radio" id="mb1-download" name="bytes-download" value="1048576">
+                <label for="mb1-download">1 MB</label>
+            </div>
+            <div>
+                <input type="radio" id="gb1-download" name="bytes-download" value="1073741824">
+                <label for="gb1-download">1 GB</label>
+            </div>
+            <div>
+                <input type="radio" id="custom-download" name="bytes-download" value="custom">
+                <label for="custom-download">Custom:</label>
+                <input type="number" id="customBytes-download" name="customBytesValue-download" class="customBytesInput" placeholder="Enter bytes">
+            </div>
+        </fieldset>
+    </div>
+
+    <div id="controls-container">
+        <input
+                id="peerAddress"
+                type="text"
+                placeholder="Enter peer multiaddress"
+        >
+        <button id="runDemo" onclick="runDemo()">Run WebRTC Demo</button>
+    </div>
+    <div id="output"></div>
+</div>
+
+<script type="module">
+    import {multiaddr, CODE_IP4, CODE_UDP, CODE_CERTHASH} from 'https://esm.sh/@multiformats/multiaddr@12.5.1';
+    import {base64url} from 'https://esm.sh/multiformats@13.4.0/bases/base64';
+    import init, {run_client} from './pkg/smoldot_wasm_client.js';
+
+    const maxMessageSize = 16384;
+
+    window.runDemo = async function () {
+        const output = document.getElementById('output');
+        output.textContent = 'Loading WASM module...\n';
+
+        try {
+            await init();
+            output.textContent += 'WASM module loaded successfully!\n';
+        } catch (error) {
+            output.textContent += `Error: ${error}\n`;
+        }
+
+        output.textContent += 'Running WebRTC demo...\n';
+
+        const uploadFieldset = document.getElementById('upload-fieldset');
+        const downloadFieldset = document.getElementById('download-fieldset');
+        const uploadBytes = getSelectedBytes(uploadFieldset);
+        const downloadBytes = getSelectedBytes(downloadFieldset);
+        const peer = document.getElementById('peerAddress').value;
+
+        await run_client(uploadBytes, downloadBytes, peer).catch(error => {
+            output.textContent += `\n\n${error}\n`;
+        });
+    };
+
+    const channels = {}; // channelId -> DataChannel
+
+    export function sendTo(channelId, data) {
+        // console.log(`JS: sending ${data.length} byte(s) to channel ${channelId}: ${String(data)}`);
+
+        const channel = channels[channelId];
+
+        if (!channel) {
+            throw new Error(`JS: channel ${channelId} not found`);
+        }
+
+        if (channel.readyState !== 'open') {
+            throw new Error(`JS: channel ${channelId} is not in ready state`);
+        }
+
+        channel.send(data);
+    }
+
+    globalThis.sendTo = sendTo;
+
+    export async function generateCertificate() {
+        return await RTCPeerConnection.generateCertificate({
+            name: 'ECDSA',
+            hash: 'SHA-256',
+            namedCurve: 'P-256',
+        });
+    }
+
+    globalThis.generateCertificate = generateCertificate;
+
+    export function getCertificateMultihash(certificate) {
+        const fp = certificate.getFingerprints().find(f => f.algorithm.toUpperCase() === 'SHA-256');
+        if (!fp) throw new Error('No SHA-256 fingerprint on certificate');
+
+        const clean = fp.value.replace(/:/g, '');
+        const out = new Uint8Array(clean.length / 2);
+
+        for (let i = 0; i < out.length; i++) {
+            out[i] = Number.parseInt(clean.slice(i * 2, i * 2 + 2), 16);
+        }
+
+        const mh = new Uint8Array(2 + 32);
+        mh[0] = 0x12;
+        mh[1] = 0x20;
+        mh.set(out, 2);
+        return mh;
+    }
+
+    globalThis.getCertificateMultihash = getCertificateMultihash;
+
+    export function now() {
+        return performance.now();
+    }
+
+    globalThis.now = now;
+
+    globalThis.smoldotGlue = {
+        // datachannel has been opened by the remote
+        onDatachannelOpen: (channelId) => {
+            console.log(`JS: glue stub onDatachannelOpen() channelId: ${channelId}`);
+        },
+        // locally opened datachannel is ready for bizniz
+        onDatachannelReady: (channelId) => {
+            console.log(`JS: glue stub onDatachannelReady() channelId: ${channelId}`);
+        },
+        onDatachannelClose: (channelId) => {
+            console.log(`JS: glue stub onDatachannelClose(): channelId: ${channelId}`);
+            delete channels[channelId];
+        },
+        onDatachannelError: (channelId, msg) => {
+            console.log(`JS: glue stub onDatachannelError(): channelId: ${channelId}, msg: ${msg}`);
+            delete channels[channelId];
+        },
+        onMessage: (channelId, _data) => {
+            console.log(`JS: glue stub onMessage(): channelId: ${channelId}`);
+        },
+        onTimeElapsed: () => {
+            console.log(`JS: glue stub onTimeElapsed()`);
+        }
+    }
+
+    export function setGlue(glue) {
+        globalThis.smoldotGlue = glue;
+    }
+
+    globalThis.setGlue = setGlue;
+
+    export function createDatachannel() {
+        const dc = globalThis.rtcPeerConnection.createDataChannel('', {
+            ordered: true,
+        });
+
+        dc.onopen = event => globalThis.smoldotGlue.onDatachannelReady(event.target.id);
+
+        configureDatachannel(dc);
+
+        // Make sure we resume sending after pausing for the send queue to drain.
+        dc.onbufferedamountlow = () => {
+            globalThis.smoldotGlue.onTimeElapsed();
+        };
+
+        return dc.id;
+    }
+
+    globalThis.createDatachannel = createDatachannel;
+
+    export async function dialWebRtcDirect(address, certificate) {
+        const pc = new RTCPeerConnection({certificates: [certificate], iceServers: []});
+        globalThis.rtcPeerConnection = pc;
+
+        pc.ondatachannel = event => {
+            channels[event.channel.id] = event.channel;
+
+            event.channel.onmessage = dataEvent => {
+                const data = new Uint8Array(dataEvent.data);
+                // console.log(`JS: ${data.length} bytes received on channel ${event.channel.id}: ${String(data)}`);
+                globalThis.smoldotGlue.onMessage(event.channel.id, data);
+            };
+
+            event.channel.onclose = () => {
+                globalThis.smoldotGlue.onDatachannelClose(event.channel.id);
+            }
+
+            event.channel.onerror = err => {
+                const msg = `${err}`;
+                globalThis.smoldotGlue.onDatachannelError(event.channel.id, msg);
+            }
+
+            globalThis.smoldotGlue.onDatachannelOpen(event.channel.id);
+        };
+
+        const dc = pc.createDataChannel('', {
+            negotiated: true,
+            id: 0,
+            ordered: true,
+        });
+
+        configureDatachannel(dc);
+
+        // Build answer and offer with patched ICE ufrag/pwd with libp2p tag
+        const ufrag = `libp2p+webrtc+v1/${randomString()}`;
+
+        const offer = await pc.createOffer({offerToReceiveAudio: false, offerToReceiveVideo: false});
+        offer.sdp = mungeOffer(offer.sdp, ufrag);
+
+        await pc.setLocalDescription(offer);
+
+        const ma = multiaddr(address);
+        const componentsByCode = {};
+        ma.getComponents().forEach(c => componentsByCode[c.code] = c.value);
+
+        const {[CODE_IP4]: ip, [CODE_UDP]: port, [CODE_CERTHASH]: certhash} = componentsByCode;
+        const answer = buildAnswer(ip, port, certhash, ufrag);
+
+        await pc.setRemoteDescription(answer);
+    }
+
+    globalThis.dialWebRtcDirect = dialWebRtcDirect;
+
+    export function scheduleTick() {
+        setTimeout(() => {
+            globalThis.smoldotGlue.onTimeElapsed();
+        }, 100);
+    }
+
+    globalThis.scheduleTick = scheduleTick;
+
+    function configureDatachannel(dc) {
+        channels[dc.id] = dc;
+        dc.binaryType = 'arraybuffer';
+
+        dc.onmessage = event => {
+            const data = new Uint8Array(event.data);
+            // console.log(`JS: ${data.length} bytes received on channel ${dc.id}`); //: ${data}`);
+            globalThis.smoldotGlue.onMessage(dc.id, data);
+        };
+
+        dc.onclose = () => {
+            globalThis.smoldotGlue.onDatachannelClose(dc.id);
+            delete channels[dc.id];
+        };
+
+        dc.onerror = err => {
+            const msg = `${err}`;
+            globalThis.smoldotGlue.onDatachannelError(dc.id, msg);
+            delete channels[dc.id];
+        };
+    }
+
+    function buildAnswer(ip, port, certhash, ufrag) {
+        // Single host candidate, ICE-lite, DTLS passive, SCTP port 5000, max message size 16KiB.
+        const sdp = [
+            'v=0',
+            'o=- 0 0 IN IP4 127.0.0.1',
+            's=-',
+            't=0 0',
+            'a=ice-lite',
+            `a=fingerprint:sha-256 ${certhashToSdpFingerprint(certhash)}`,
+            `a=ice-ufrag:${ufrag}`,
+            `a=ice-pwd:${ufrag}`,
+            'a=setup:passive',
+            'm=application 9 UDP/DTLS/SCTP webrtc-datachannel',
+            `c=IN IP4 ${ip}`,
+            'a=mid:0',
+            `a=candidate:1 1 UDP 2130706431 ${ip} ${port} typ host`,
+            'a=end-of-candidates',
+            'a=sctp-port:5000',
+            `a=max-message-size:${maxMessageSize}`,
+        ].join('\r\n') + '\r\n';
+
+        return {
+            type: 'answer',
+            sdp: sdp,
+        }
+    }
+
+    function mungeOffer(sdp, ufrag) {
+        return sdp
+            .replace(/a=ice-ufrag:.+\r\n/, `a=ice-ufrag:${ufrag}\r\n`)
+            .replace(/a=ice-pwd:.+\r\n/, `a=ice-pwd:${ufrag}\r\n`)
+            .replace(/a=max-message-size:.+\r\n/, `a=max-message-size:${maxMessageSize}\r\n`);
+    }
+
+    function certhashToSdpFingerprint(certhash) {
+        // certhash is multibase; 'u' means base64url (no padding)
+        if (!certhash || certhash[0] !== 'u') {
+            throw new Error('Expected base64url multibase certhash starting with "u"');
+        }
+
+        const mh = base64url.decode(certhash);
+        // Multihash: 0x12 = sha2-256, 0x20 = 32 bytes
+        if (mh.length !== 34 || mh[0] !== 0x12 || mh[1] !== 0x20) {
+            throw new Error('Unsupported certhash multihash; expected sha2-256/32');
+        }
+
+        const digest = mh.slice(2); // 32-byte SHA-256
+        return Array.from(digest)
+            .map(b => b.toString(16).padStart(2, '0'))
+            .join(':')
+            .toUpperCase();
+    }
+
+    function randomString(len = 5) {
+        const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        const arr = new Uint8Array(len);
+        crypto.getRandomValues(arr);
+        let s = '';
+        for (let i = 0; i < len; i++) s += chars[arr[i] % chars.length];
+        return s;
+    }
+
+    function getSelectedBytes(fieldsetElement) {
+        const selectedRadio = fieldsetElement.querySelector('input[type="radio"]:checked');
+
+        if (!selectedRadio) {
+            const output = document.getElementById('output');
+            output.textContent += 'No bytes specified for a fieldset!\n';
+            return BigInt(0);
+        }
+
+        if (selectedRadio.value === 'custom') {
+            const customInput = fieldsetElement.querySelector('.customBytesInput');
+            return BigInt(parseInt(customInput.value) || 0);
+        } else {
+            return BigInt(parseInt(selectedRadio.value));
+        }
+    }
+</script>
+
+<script>
+    function initializeByteSelector(fieldsetElement) {
+        const customRadio = fieldsetElement.querySelector('input[value="custom"]');
+        const customInput = fieldsetElement.querySelector('.customBytesInput');
+        const otherRadios = fieldsetElement.querySelectorAll('input[type="radio"]:not([value="custom"])');
+
+        customInput.disabled = !customRadio.checked;
+
+        customRadio.addEventListener('change', () => {
+            if (customRadio.checked) {
+                customInput.disabled = false;
+                customInput.focus();
+            }
+        });
+
+        otherRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                if (radio.checked) {
+                    customInput.disabled = true;
+                    customInput.value = '';
+                }
+            });
+        });
+
+        customInput.addEventListener('focus', () => {
+            customRadio.checked = true;
+            customInput.disabled = false;
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const setCustomValueFromParam = (fieldsetElement, value) => {
+            if (value === null) {
+                return;
+            }
+
+            const numericValue = parseInt(value, 10);
+            if (isNaN(numericValue)) {
+                return;
+            }
+
+            const customRadio = fieldsetElement.querySelector('input[value="custom"]');
+            const customInput = fieldsetElement.querySelector('.customBytesInput');
+
+            if (customRadio && customInput) {
+                customInput.value = numericValue;
+                customRadio.checked = true;
+            }
+        };
+
+        const urlParams = new URLSearchParams(window.location.search);
+
+        const uploadFieldset = document.getElementById('upload-fieldset');
+        const downloadFieldset = document.getElementById('download-fieldset');
+
+        // FORCE default 1 MB selection
+        uploadFieldset.querySelector('#mb1-upload').checked = true;
+        downloadFieldset.querySelector('#mb1-download').checked = true;
+
+        setCustomValueFromParam(uploadFieldset, urlParams.get('upload_bytes'));
+        setCustomValueFromParam(downloadFieldset, urlParams.get('download_bytes'));
+
+        document.querySelectorAll('.byte-selector').forEach(fieldset => {
+            initializeByteSelector(fieldset);
+        });
+
+        const peerInput = document.getElementById('peerAddress');
+        const peerParam = urlParams.get('peer');
+        if (peerParam) {
+            peerInput.value = peerParam;
+        }
+    });
+</script>
+</body>
+</html>

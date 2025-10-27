@@ -16,6 +16,7 @@ async fn write_u64<S: AsyncRead + AsyncWrite + Unpin + Send + 'static>(
     value: u64,
 ) -> Result<(), std::io::Error> {
     substream.write_all(&value.to_be_bytes()).await?;
+    substream.flush().await?;
     Ok(())
 }
 
@@ -43,6 +44,7 @@ async fn send_bytes<S: AsyncRead + AsyncWrite + Unpin + Send + 'static>(
     let mut total = 0;
     while total < to_send {
         substream.write_all(&buf).await?;
+        substream.flush().await?;
         total += buf.len() as u64;
     }
     Ok(())
