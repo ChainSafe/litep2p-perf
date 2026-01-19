@@ -1,0 +1,405 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.30s
+     Running `/Users/haiko/code/polkadot/litep2p-perf/target/debug/litep2p-perf server --listen-address '/ip6/::/tcp/33333' --node-key secret`
+2026-01-19T06:44:40.618941Z DEBUG litep2p: enable user protocol protocol=Static("/litep2p-perf/1.0.0")
+2026-01-19T06:44:40.619537Z DEBUG litep2p::tcp: start tcp transport listen_addresses=["/ip6/::/tcp/33333"]
+2026-01-19T06:44:40.622487Z DEBUG litep2p::transport-manager: register transport transport=Tcp
+2026-01-19T06:44:40.622672Z  INFO litep2p_perf: Server listening on address: ["/ip6/fd07:b51a:cc66:0:a617:db5e:ab7:e9f1/tcp/33333/p2p/12D3KooWBpZHDZu7YSbvPaPXKhkRNJvR7MkTJMQQAVBKx9mCqz3q", "/ip6/::1/tcp/33333/p2p/12D3KooWBpZHDZu7YSbvPaPXKhkRNJvR7MkTJMQQAVBKx9mCqz3q", "/ip6/2405:9800:b900:c17e:493:f686:7edc:5cfc/tcp/33333/p2p/12D3KooWBpZHDZu7YSbvPaPXKhkRNJvR7MkTJMQQAVBKx9mCqz3q", "/ip6/2405:9800:b900:c17e:e5ce:197b:7b3a:b6a0/tcp/33333/p2p/12D3KooWBpZHDZu7YSbvPaPXKhkRNJvR7MkTJMQQAVBKx9mCqz3q", "/ip6/2405:9800:b900:c17e:c944:43bc:d183:f74d/tcp/33333/p2p/12D3KooWBpZHDZu7YSbvPaPXKhkRNJvR7MkTJMQQAVBKx9mCqz3q", "/ip6/2405:9800:b900:c17e::2/tcp/33333/p2p/12D3KooWBpZHDZu7YSbvPaPXKhkRNJvR7MkTJMQQAVBKx9mCqz3q"]
+2026-01-19T06:44:45.493344Z DEBUG litep2p::tcp::connection: accept connection address=[::1]:55105
+2026-01-19T06:44:45.494419Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /noise
+2026-01-19T06:44:45.494468Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /noise
+2026-01-19T06:44:45.494559Z DEBUG litep2p::crypto::noise: start noise handshake role=Listener ty=Tcp
+2026-01-19T06:44:45.500510Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /yamux/1.0.0
+2026-01-19T06:44:45.500556Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /yamux/1.0.0
+2026-01-19T06:44:45.500625Z DEBUG yamux::connection: new connection: dd20196f (Server)    
+2026-01-19T06:44:45.500873Z  INFO litep2p_perf: Event: ConnectionEstablished { peer: PeerId("12D3KooWKhGaXauHfiC9S1zcgrUCXZLArAbHpan6kQvPDhDDuaBx"), endpoint: Listener { address: "/ip6/::1/tcp/55105", connection_id: ConnectionId(0) } }
+2026-01-19T06:44:45.501197Z DEBUG yamux::connection::rtt: sending ping 1141611934    
+2026-01-19T06:44:45.501363Z DEBUG litep2p::yamux::control: Inbound stream reset state to idle other=Some(Ok(Stream { id: 1, connection: dd20196f }))
+2026-01-19T06:44:45.501419Z DEBUG yamux::connection::rtt: received pong 1141611934, estimated round-trip-time 225.042µs    
+2026-01-19T06:44:45.501497Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /litep2p-perf/1.0.0
+2026-01-19T06:44:45.501512Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /litep2p-perf/1.0.0
+2026-01-19T06:44:45.501533Z DEBUG litep2p::protocol-set: substream opened protocol=/litep2p-perf/1.0.0 peer=PeerId("12D3KooWKhGaXauHfiC9S1zcgrUCXZLArAbHpan6kQvPDhDDuaBx") direction=Inbound
+2026-01-19T06:44:45.501646Z DEBUG litep2p::transport-service: on connection established peer=PeerId("12D3KooWKhGaXauHfiC9S1zcgrUCXZLArAbHpan6kQvPDhDDuaBx") endpoint=Listener { address: "/ip6/::1/tcp/55105", connection_id: ConnectionId(0) } connection_id=ConnectionId(0) protocol=/litep2p-perf/1.0.0 current_state=None
+2026-01-19T06:44:45.502531Z DEBUG litep2p::yamux::control: Inbound stream error, closing connection error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:44:45.502568Z DEBUG litep2p::tcp::connection: connection closed with error peer=PeerId("12D3KooWKhGaXauHfiC9S1zcgrUCXZLArAbHpan6kQvPDhDDuaBx") error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:44:45.502649Z  INFO litep2p_perf: Event: ConnectionClosed { peer: PeerId("12D3KooWKhGaXauHfiC9S1zcgrUCXZLArAbHpan6kQvPDhDDuaBx"), connection_id: ConnectionId(0) }
+2026-01-19T06:44:45.502676Z DEBUG litep2p::transport-service: on connection closed peer=PeerId("12D3KooWKhGaXauHfiC9S1zcgrUCXZLArAbHpan6kQvPDhDDuaBx") connection_id=ConnectionId(0) protocol=/litep2p-perf/1.0.0 current_state=Some(ConnectionContext { primary: ConnectionHandle { connection: Active(Sender { chan: Tx { inner: Chan { tx: Tx { block_tail: 0xb990f0000, tail_position: 0 }, semaphore: Semaphore { semaphore: Semaphore { permits: 256 }, bound: 256 }, rx_waker: AtomicWaker, tx_count: 1, rx_fields: "..." } } }), connection_id: ConnectionId(0) }, secondary: None })
+2026-01-19T06:44:45.502734Z  INFO litep2p-perf: connection closed peer=PeerId("12D3KooWKhGaXauHfiC9S1zcgrUCXZLArAbHpan6kQvPDhDDuaBx")
+2026-01-19T06:44:46.471735Z DEBUG litep2p::tcp::connection: accept connection address=[::1]:55106
+2026-01-19T06:44:46.472834Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /noise
+2026-01-19T06:44:46.472871Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /noise
+2026-01-19T06:44:46.472894Z DEBUG litep2p::crypto::noise: start noise handshake role=Listener ty=Tcp
+2026-01-19T06:44:46.478907Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /yamux/1.0.0
+2026-01-19T06:44:46.478943Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /yamux/1.0.0
+2026-01-19T06:44:46.478970Z DEBUG yamux::connection: new connection: 01a204a2 (Server)    
+2026-01-19T06:44:46.479063Z  INFO litep2p_perf: Event: ConnectionEstablished { peer: PeerId("12D3KooWC1v5bAnPhhGE1odxgxoXiXgZZdmhK41M5K84QbYZiy7Y"), endpoint: Listener { address: "/ip6/::1/tcp/55106", connection_id: ConnectionId(1) } }
+2026-01-19T06:44:46.479166Z DEBUG yamux::connection::rtt: sending ping 2105377212    
+2026-01-19T06:44:46.479241Z DEBUG litep2p::yamux::control: Inbound stream reset state to idle other=Some(Ok(Stream { id: 1, connection: 01a204a2 }))
+2026-01-19T06:44:46.479306Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /litep2p-perf/1.0.0
+2026-01-19T06:44:46.479320Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /litep2p-perf/1.0.0
+2026-01-19T06:44:46.479343Z DEBUG litep2p::protocol-set: substream opened protocol=/litep2p-perf/1.0.0 peer=PeerId("12D3KooWC1v5bAnPhhGE1odxgxoXiXgZZdmhK41M5K84QbYZiy7Y") direction=Inbound
+2026-01-19T06:44:46.479421Z DEBUG yamux::connection::rtt: received pong 2105377212, estimated round-trip-time 258.334µs    
+2026-01-19T06:44:46.479448Z DEBUG litep2p::transport-service: on connection established peer=PeerId("12D3KooWC1v5bAnPhhGE1odxgxoXiXgZZdmhK41M5K84QbYZiy7Y") endpoint=Listener { address: "/ip6/::1/tcp/55106", connection_id: ConnectionId(1) } connection_id=ConnectionId(1) protocol=/litep2p-perf/1.0.0 current_state=None
+2026-01-19T06:44:46.480334Z DEBUG litep2p::yamux::control: Inbound stream error, closing connection error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:44:46.480357Z DEBUG litep2p::tcp::connection: connection closed with error peer=PeerId("12D3KooWC1v5bAnPhhGE1odxgxoXiXgZZdmhK41M5K84QbYZiy7Y") error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:44:46.480417Z  INFO litep2p_perf: Event: ConnectionClosed { peer: PeerId("12D3KooWC1v5bAnPhhGE1odxgxoXiXgZZdmhK41M5K84QbYZiy7Y"), connection_id: ConnectionId(1) }
+2026-01-19T06:44:46.480419Z DEBUG litep2p::transport-service: on connection closed peer=PeerId("12D3KooWC1v5bAnPhhGE1odxgxoXiXgZZdmhK41M5K84QbYZiy7Y") connection_id=ConnectionId(1) protocol=/litep2p-perf/1.0.0 current_state=Some(ConnectionContext { primary: ConnectionHandle { connection: Active(Sender { chan: Tx { inner: Chan { tx: Tx { block_tail: 0xb990f0000, tail_position: 0 }, semaphore: Semaphore { semaphore: Semaphore { permits: 256 }, bound: 256 }, rx_waker: AtomicWaker, tx_count: 1, rx_fields: "..." } } }), connection_id: ConnectionId(1) }, secondary: None })
+2026-01-19T06:44:46.480478Z  INFO litep2p-perf: connection closed peer=PeerId("12D3KooWC1v5bAnPhhGE1odxgxoXiXgZZdmhK41M5K84QbYZiy7Y")
+2026-01-19T06:44:47.443496Z DEBUG litep2p::tcp::connection: accept connection address=[::1]:55107
+2026-01-19T06:44:47.444531Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /noise
+2026-01-19T06:44:47.444568Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /noise
+2026-01-19T06:44:47.444603Z DEBUG litep2p::crypto::noise: start noise handshake role=Listener ty=Tcp
+2026-01-19T06:44:47.450453Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /yamux/1.0.0
+2026-01-19T06:44:47.450492Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /yamux/1.0.0
+2026-01-19T06:44:47.450520Z DEBUG yamux::connection: new connection: 4a4021b2 (Server)    
+2026-01-19T06:44:47.450608Z  INFO litep2p_perf: Event: ConnectionEstablished { peer: PeerId("12D3KooWHmRec5KzbroAwrEwqMjEmieHimrseYUtzEXgV8gjawvD"), endpoint: Listener { address: "/ip6/::1/tcp/55107", connection_id: ConnectionId(2) } }
+2026-01-19T06:44:47.450703Z DEBUG yamux::connection::rtt: sending ping 3599936384    
+2026-01-19T06:44:47.450769Z DEBUG litep2p::yamux::control: Inbound stream reset state to idle other=Some(Ok(Stream { id: 1, connection: 4a4021b2 }))
+2026-01-19T06:44:47.450828Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /litep2p-perf/1.0.0
+2026-01-19T06:44:47.450841Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /litep2p-perf/1.0.0
+2026-01-19T06:44:47.450861Z DEBUG litep2p::protocol-set: substream opened protocol=/litep2p-perf/1.0.0 peer=PeerId("12D3KooWHmRec5KzbroAwrEwqMjEmieHimrseYUtzEXgV8gjawvD") direction=Inbound
+2026-01-19T06:44:47.450936Z DEBUG yamux::connection::rtt: received pong 3599936384, estimated round-trip-time 234.417µs    
+2026-01-19T06:44:47.450962Z DEBUG litep2p::transport-service: on connection established peer=PeerId("12D3KooWHmRec5KzbroAwrEwqMjEmieHimrseYUtzEXgV8gjawvD") endpoint=Listener { address: "/ip6/::1/tcp/55107", connection_id: ConnectionId(2) } connection_id=ConnectionId(2) protocol=/litep2p-perf/1.0.0 current_state=None
+2026-01-19T06:44:47.451863Z DEBUG litep2p::yamux::control: Inbound stream error, closing connection error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:44:47.451876Z DEBUG litep2p::tcp::connection: connection closed with error peer=PeerId("12D3KooWHmRec5KzbroAwrEwqMjEmieHimrseYUtzEXgV8gjawvD") error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:44:47.451939Z  INFO litep2p_perf: Event: ConnectionClosed { peer: PeerId("12D3KooWHmRec5KzbroAwrEwqMjEmieHimrseYUtzEXgV8gjawvD"), connection_id: ConnectionId(2) }
+2026-01-19T06:44:47.451938Z DEBUG litep2p::transport-service: on connection closed peer=PeerId("12D3KooWHmRec5KzbroAwrEwqMjEmieHimrseYUtzEXgV8gjawvD") connection_id=ConnectionId(2) protocol=/litep2p-perf/1.0.0 current_state=Some(ConnectionContext { primary: ConnectionHandle { connection: Active(Sender { chan: Tx { inner: Chan { tx: Tx { block_tail: 0xb990f0000, tail_position: 0 }, semaphore: Semaphore { semaphore: Semaphore { permits: 256 }, bound: 256 }, rx_waker: AtomicWaker, tx_count: 1, rx_fields: "..." } } }), connection_id: ConnectionId(2) }, secondary: None })
+2026-01-19T06:44:47.451984Z  INFO litep2p-perf: connection closed peer=PeerId("12D3KooWHmRec5KzbroAwrEwqMjEmieHimrseYUtzEXgV8gjawvD")
+2026-01-19T06:44:48.454927Z DEBUG litep2p::tcp::connection: accept connection address=[::1]:55108
+2026-01-19T06:44:48.455937Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /noise
+2026-01-19T06:44:48.455956Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /noise
+2026-01-19T06:44:48.455972Z DEBUG litep2p::crypto::noise: start noise handshake role=Listener ty=Tcp
+2026-01-19T06:44:48.459599Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /yamux/1.0.0
+2026-01-19T06:44:48.459620Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /yamux/1.0.0
+2026-01-19T06:44:48.459639Z DEBUG yamux::connection: new connection: 6c17e77a (Server)    
+2026-01-19T06:44:48.459718Z  INFO litep2p_perf: Event: ConnectionEstablished { peer: PeerId("12D3KooWPa7nACovFT11u9tBjCaBHSwJ4kE5P3hbCyHMC1hN6FKJ"), endpoint: Listener { address: "/ip6/::1/tcp/55108", connection_id: ConnectionId(3) } }
+2026-01-19T06:44:48.459793Z DEBUG yamux::connection::rtt: sending ping 1616993478    
+2026-01-19T06:44:48.459840Z DEBUG litep2p::yamux::control: Inbound stream reset state to idle other=Some(Ok(Stream { id: 1, connection: 6c17e77a }))
+2026-01-19T06:44:48.459881Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /litep2p-perf/1.0.0
+2026-01-19T06:44:48.459890Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /litep2p-perf/1.0.0
+2026-01-19T06:44:48.459905Z DEBUG litep2p::protocol-set: substream opened protocol=/litep2p-perf/1.0.0 peer=PeerId("12D3KooWPa7nACovFT11u9tBjCaBHSwJ4kE5P3hbCyHMC1hN6FKJ") direction=Inbound
+2026-01-19T06:44:48.459957Z DEBUG yamux::connection::rtt: received pong 1616993478, estimated round-trip-time 165.375µs    
+2026-01-19T06:44:48.459975Z DEBUG litep2p::transport-service: on connection established peer=PeerId("12D3KooWPa7nACovFT11u9tBjCaBHSwJ4kE5P3hbCyHMC1hN6FKJ") endpoint=Listener { address: "/ip6/::1/tcp/55108", connection_id: ConnectionId(3) } connection_id=ConnectionId(3) protocol=/litep2p-perf/1.0.0 current_state=None
+2026-01-19T06:44:48.460690Z DEBUG litep2p::yamux::control: Inbound stream error, closing connection error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:44:48.460702Z DEBUG litep2p::tcp::connection: connection closed with error peer=PeerId("12D3KooWPa7nACovFT11u9tBjCaBHSwJ4kE5P3hbCyHMC1hN6FKJ") error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:44:48.460739Z  INFO litep2p_perf: Event: ConnectionClosed { peer: PeerId("12D3KooWPa7nACovFT11u9tBjCaBHSwJ4kE5P3hbCyHMC1hN6FKJ"), connection_id: ConnectionId(3) }
+2026-01-19T06:44:48.460743Z DEBUG litep2p::transport-service: on connection closed peer=PeerId("12D3KooWPa7nACovFT11u9tBjCaBHSwJ4kE5P3hbCyHMC1hN6FKJ") connection_id=ConnectionId(3) protocol=/litep2p-perf/1.0.0 current_state=Some(ConnectionContext { primary: ConnectionHandle { connection: Active(Sender { chan: Tx { inner: Chan { tx: Tx { block_tail: 0xb990f0000, tail_position: 0 }, semaphore: Semaphore { semaphore: Semaphore { permits: 256 }, bound: 256 }, rx_waker: AtomicWaker, tx_count: 1, rx_fields: "..." } } }), connection_id: ConnectionId(3) }, secondary: None })
+2026-01-19T06:44:48.460772Z  INFO litep2p-perf: connection closed peer=PeerId("12D3KooWPa7nACovFT11u9tBjCaBHSwJ4kE5P3hbCyHMC1hN6FKJ")
+2026-01-19T06:44:49.517115Z DEBUG litep2p::tcp::connection: accept connection address=[::1]:55109
+2026-01-19T06:44:49.518251Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /noise
+2026-01-19T06:44:49.518281Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /noise
+2026-01-19T06:44:49.518307Z DEBUG litep2p::crypto::noise: start noise handshake role=Listener ty=Tcp
+2026-01-19T06:44:49.521968Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /yamux/1.0.0
+2026-01-19T06:44:49.521989Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /yamux/1.0.0
+2026-01-19T06:44:49.522007Z DEBUG yamux::connection: new connection: af25f39d (Server)    
+2026-01-19T06:44:49.522076Z  INFO litep2p_perf: Event: ConnectionEstablished { peer: PeerId("12D3KooWPDGG45g346dFT5BtdGy49NdviqBfapH2QzbKSASZcZsz"), endpoint: Listener { address: "/ip6/::1/tcp/55109", connection_id: ConnectionId(4) } }
+2026-01-19T06:44:49.522140Z DEBUG yamux::connection::rtt: sending ping 3036803647    
+2026-01-19T06:44:49.522179Z DEBUG litep2p::yamux::control: Inbound stream reset state to idle other=Some(Ok(Stream { id: 1, connection: af25f39d }))
+2026-01-19T06:44:49.522231Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /litep2p-perf/1.0.0
+2026-01-19T06:44:49.522242Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /litep2p-perf/1.0.0
+2026-01-19T06:44:49.522256Z DEBUG litep2p::protocol-set: substream opened protocol=/litep2p-perf/1.0.0 peer=PeerId("12D3KooWPDGG45g346dFT5BtdGy49NdviqBfapH2QzbKSASZcZsz") direction=Inbound
+2026-01-19T06:44:49.522352Z DEBUG yamux::connection::rtt: received pong 3036803647, estimated round-trip-time 212.416µs    
+2026-01-19T06:44:49.522338Z DEBUG litep2p::transport-service: on connection established peer=PeerId("12D3KooWPDGG45g346dFT5BtdGy49NdviqBfapH2QzbKSASZcZsz") endpoint=Listener { address: "/ip6/::1/tcp/55109", connection_id: ConnectionId(4) } connection_id=ConnectionId(4) protocol=/litep2p-perf/1.0.0 current_state=None
+2026-01-19T06:44:49.523438Z DEBUG litep2p::yamux::control: Inbound stream error, closing connection error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:44:49.523448Z DEBUG litep2p::tcp::connection: connection closed with error peer=PeerId("12D3KooWPDGG45g346dFT5BtdGy49NdviqBfapH2QzbKSASZcZsz") error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:44:49.523490Z  INFO litep2p_perf: Event: ConnectionClosed { peer: PeerId("12D3KooWPDGG45g346dFT5BtdGy49NdviqBfapH2QzbKSASZcZsz"), connection_id: ConnectionId(4) }
+2026-01-19T06:44:49.523489Z DEBUG litep2p::transport-service: on connection closed peer=PeerId("12D3KooWPDGG45g346dFT5BtdGy49NdviqBfapH2QzbKSASZcZsz") connection_id=ConnectionId(4) protocol=/litep2p-perf/1.0.0 current_state=Some(ConnectionContext { primary: ConnectionHandle { connection: Active(Sender { chan: Tx { inner: Chan { tx: Tx { block_tail: 0xb990f0000, tail_position: 0 }, semaphore: Semaphore { semaphore: Semaphore { permits: 256 }, bound: 256 }, rx_waker: AtomicWaker, tx_count: 1, rx_fields: "..." } } }), connection_id: ConnectionId(4) }, secondary: None })
+2026-01-19T06:44:49.523522Z  INFO litep2p-perf: connection closed peer=PeerId("12D3KooWPDGG45g346dFT5BtdGy49NdviqBfapH2QzbKSASZcZsz")
+2026-01-19T06:44:50.504682Z DEBUG litep2p::transport-service: Last activity no longer tracks the connection (closed event triggered) peer=PeerId("12D3KooWKhGaXauHfiC9S1zcgrUCXZLArAbHpan6kQvPDhDDuaBx") connection_id=ConnectionId(0)
+2026-01-19T06:44:50.571958Z DEBUG litep2p::tcp::connection: accept connection address=[::1]:55110
+2026-01-19T06:44:50.573319Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /noise
+2026-01-19T06:44:50.573357Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /noise
+2026-01-19T06:44:50.573379Z DEBUG litep2p::crypto::noise: start noise handshake role=Listener ty=Tcp
+2026-01-19T06:44:50.579376Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /yamux/1.0.0
+2026-01-19T06:44:50.579415Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /yamux/1.0.0
+2026-01-19T06:44:50.579441Z DEBUG yamux::connection: new connection: d0c4c9d8 (Server)    
+2026-01-19T06:44:50.579532Z  INFO litep2p_perf: Event: ConnectionEstablished { peer: PeerId("12D3KooWJRsACdTzGz1XwrU2DodUUbca6DBxUndN1KYzQTQPB5VC"), endpoint: Listener { address: "/ip6/::1/tcp/55110", connection_id: ConnectionId(5) } }
+2026-01-19T06:44:50.579587Z DEBUG yamux::connection::rtt: sending ping 1580260002    
+2026-01-19T06:44:50.579653Z DEBUG litep2p::yamux::control: Inbound stream reset state to idle other=Some(Ok(Stream { id: 1, connection: d0c4c9d8 }))
+2026-01-19T06:44:50.579716Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /litep2p-perf/1.0.0
+2026-01-19T06:44:50.579731Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /litep2p-perf/1.0.0
+2026-01-19T06:44:50.579752Z DEBUG litep2p::protocol-set: substream opened protocol=/litep2p-perf/1.0.0 peer=PeerId("12D3KooWJRsACdTzGz1XwrU2DodUUbca6DBxUndN1KYzQTQPB5VC") direction=Inbound
+2026-01-19T06:44:50.579831Z DEBUG yamux::connection::rtt: received pong 1580260002, estimated round-trip-time 246.625µs    
+2026-01-19T06:44:50.579858Z DEBUG litep2p::transport-service: on connection established peer=PeerId("12D3KooWJRsACdTzGz1XwrU2DodUUbca6DBxUndN1KYzQTQPB5VC") endpoint=Listener { address: "/ip6/::1/tcp/55110", connection_id: ConnectionId(5) } connection_id=ConnectionId(5) protocol=/litep2p-perf/1.0.0 current_state=None
+2026-01-19T06:44:50.582109Z DEBUG litep2p::yamux::control: Inbound stream error, closing connection error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:44:50.582136Z DEBUG litep2p::tcp::connection: connection closed with error peer=PeerId("12D3KooWJRsACdTzGz1XwrU2DodUUbca6DBxUndN1KYzQTQPB5VC") error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:44:50.582195Z  INFO litep2p_perf: Event: ConnectionClosed { peer: PeerId("12D3KooWJRsACdTzGz1XwrU2DodUUbca6DBxUndN1KYzQTQPB5VC"), connection_id: ConnectionId(5) }
+2026-01-19T06:44:50.582203Z DEBUG litep2p::transport-service: on connection closed peer=PeerId("12D3KooWJRsACdTzGz1XwrU2DodUUbca6DBxUndN1KYzQTQPB5VC") connection_id=ConnectionId(5) protocol=/litep2p-perf/1.0.0 current_state=Some(ConnectionContext { primary: ConnectionHandle { connection: Active(Sender { chan: Tx { inner: Chan { tx: Tx { block_tail: 0xb990f0000, tail_position: 0 }, semaphore: Semaphore { semaphore: Semaphore { permits: 256 }, bound: 256 }, rx_waker: AtomicWaker, tx_count: 1, rx_fields: "..." } } }), connection_id: ConnectionId(5) }, secondary: None })
+2026-01-19T06:44:50.582248Z  INFO litep2p-perf: connection closed peer=PeerId("12D3KooWJRsACdTzGz1XwrU2DodUUbca6DBxUndN1KYzQTQPB5VC")
+2026-01-19T06:44:51.481276Z DEBUG litep2p::transport-service: Last activity no longer tracks the connection (closed event triggered) peer=PeerId("12D3KooWC1v5bAnPhhGE1odxgxoXiXgZZdmhK41M5K84QbYZiy7Y") connection_id=ConnectionId(1)
+2026-01-19T06:44:51.557033Z DEBUG litep2p::tcp::connection: accept connection address=[::1]:55111
+2026-01-19T06:44:51.558123Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /noise
+2026-01-19T06:44:51.558160Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /noise
+2026-01-19T06:44:51.558184Z DEBUG litep2p::crypto::noise: start noise handshake role=Listener ty=Tcp
+2026-01-19T06:44:51.563771Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /yamux/1.0.0
+2026-01-19T06:44:51.563806Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /yamux/1.0.0
+2026-01-19T06:44:51.563830Z DEBUG yamux::connection: new connection: de2c43cc (Server)    
+2026-01-19T06:44:51.563916Z  INFO litep2p_perf: Event: ConnectionEstablished { peer: PeerId("12D3KooWPWaVHUjfqp5ZokaBjKdjV6WARwk1jo91jCaUX5TCArYz"), endpoint: Listener { address: "/ip6/::1/tcp/55111", connection_id: ConnectionId(6) } }
+2026-01-19T06:44:51.563960Z DEBUG yamux::connection::rtt: sending ping 1620050967    
+2026-01-19T06:44:51.564011Z DEBUG litep2p::yamux::control: Inbound stream reset state to idle other=Some(Ok(Stream { id: 1, connection: de2c43cc }))
+2026-01-19T06:44:51.564068Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /litep2p-perf/1.0.0
+2026-01-19T06:44:51.564081Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /litep2p-perf/1.0.0
+2026-01-19T06:44:51.564099Z DEBUG litep2p::protocol-set: substream opened protocol=/litep2p-perf/1.0.0 peer=PeerId("12D3KooWPWaVHUjfqp5ZokaBjKdjV6WARwk1jo91jCaUX5TCArYz") direction=Inbound
+2026-01-19T06:44:51.564172Z DEBUG yamux::connection::rtt: received pong 1620050967, estimated round-trip-time 214.291µs    
+2026-01-19T06:44:51.564195Z DEBUG litep2p::transport-service: on connection established peer=PeerId("12D3KooWPWaVHUjfqp5ZokaBjKdjV6WARwk1jo91jCaUX5TCArYz") endpoint=Listener { address: "/ip6/::1/tcp/55111", connection_id: ConnectionId(6) } connection_id=ConnectionId(6) protocol=/litep2p-perf/1.0.0 current_state=None
+2026-01-19T06:44:51.567609Z DEBUG litep2p::yamux::control: Inbound stream error, closing connection error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:44:51.567620Z DEBUG litep2p::tcp::connection: connection closed with error peer=PeerId("12D3KooWPWaVHUjfqp5ZokaBjKdjV6WARwk1jo91jCaUX5TCArYz") error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:44:51.567678Z DEBUG litep2p::transport-service: on connection closed peer=PeerId("12D3KooWPWaVHUjfqp5ZokaBjKdjV6WARwk1jo91jCaUX5TCArYz") connection_id=ConnectionId(6) protocol=/litep2p-perf/1.0.0 current_state=Some(ConnectionContext { primary: ConnectionHandle { connection: Active(Sender { chan: Tx { inner: Chan { tx: Tx { block_tail: 0xb990f0000, tail_position: 0 }, semaphore: Semaphore { semaphore: Semaphore { permits: 256 }, bound: 256 }, rx_waker: AtomicWaker, tx_count: 1, rx_fields: "..." } } }), connection_id: ConnectionId(6) }, secondary: None })
+2026-01-19T06:44:51.567725Z  INFO litep2p-perf: connection closed peer=PeerId("12D3KooWPWaVHUjfqp5ZokaBjKdjV6WARwk1jo91jCaUX5TCArYz")
+2026-01-19T06:44:51.567730Z  INFO litep2p_perf: Event: ConnectionClosed { peer: PeerId("12D3KooWPWaVHUjfqp5ZokaBjKdjV6WARwk1jo91jCaUX5TCArYz"), connection_id: ConnectionId(6) }
+2026-01-19T06:44:52.452324Z DEBUG litep2p::transport-service: Last activity no longer tracks the connection (closed event triggered) peer=PeerId("12D3KooWHmRec5KzbroAwrEwqMjEmieHimrseYUtzEXgV8gjawvD") connection_id=ConnectionId(2)
+2026-01-19T06:44:52.534228Z DEBUG litep2p::tcp::connection: accept connection address=[::1]:55112
+2026-01-19T06:44:52.535283Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /noise
+2026-01-19T06:44:52.535322Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /noise
+2026-01-19T06:44:52.535345Z DEBUG litep2p::crypto::noise: start noise handshake role=Listener ty=Tcp
+2026-01-19T06:44:52.540833Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /yamux/1.0.0
+2026-01-19T06:44:52.540871Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /yamux/1.0.0
+2026-01-19T06:44:52.540896Z DEBUG yamux::connection: new connection: 9c752b3e (Server)    
+2026-01-19T06:44:52.540986Z  INFO litep2p_perf: Event: ConnectionEstablished { peer: PeerId("12D3KooWParV6Tg9DBcaRRWFdCL2JsrRLyu5hsw9cVKDg5HEh5r2"), endpoint: Listener { address: "/ip6/::1/tcp/55112", connection_id: ConnectionId(7) } }
+2026-01-19T06:44:52.541034Z DEBUG yamux::connection::rtt: sending ping 474596331    
+2026-01-19T06:44:52.541098Z DEBUG litep2p::yamux::control: Inbound stream reset state to idle other=Some(Ok(Stream { id: 1, connection: 9c752b3e }))
+2026-01-19T06:44:52.541146Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /litep2p-perf/1.0.0
+2026-01-19T06:44:52.541160Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /litep2p-perf/1.0.0
+2026-01-19T06:44:52.541181Z DEBUG litep2p::protocol-set: substream opened protocol=/litep2p-perf/1.0.0 peer=PeerId("12D3KooWParV6Tg9DBcaRRWFdCL2JsrRLyu5hsw9cVKDg5HEh5r2") direction=Inbound
+2026-01-19T06:44:52.541257Z DEBUG yamux::connection::rtt: received pong 474596331, estimated round-trip-time 225.583µs    
+2026-01-19T06:44:52.541284Z DEBUG litep2p::transport-service: on connection established peer=PeerId("12D3KooWParV6Tg9DBcaRRWFdCL2JsrRLyu5hsw9cVKDg5HEh5r2") endpoint=Listener { address: "/ip6/::1/tcp/55112", connection_id: ConnectionId(7) } connection_id=ConnectionId(7) protocol=/litep2p-perf/1.0.0 current_state=None
+2026-01-19T06:44:52.547895Z DEBUG litep2p::yamux::control: Inbound stream error, closing connection error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:44:52.547914Z DEBUG litep2p::tcp::connection: connection closed with error peer=PeerId("12D3KooWParV6Tg9DBcaRRWFdCL2JsrRLyu5hsw9cVKDg5HEh5r2") error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:44:52.547982Z  INFO litep2p_perf: Event: ConnectionClosed { peer: PeerId("12D3KooWParV6Tg9DBcaRRWFdCL2JsrRLyu5hsw9cVKDg5HEh5r2"), connection_id: ConnectionId(7) }
+2026-01-19T06:44:52.547984Z DEBUG litep2p::transport-service: on connection closed peer=PeerId("12D3KooWParV6Tg9DBcaRRWFdCL2JsrRLyu5hsw9cVKDg5HEh5r2") connection_id=ConnectionId(7) protocol=/litep2p-perf/1.0.0 current_state=Some(ConnectionContext { primary: ConnectionHandle { connection: Active(Sender { chan: Tx { inner: Chan { tx: Tx { block_tail: 0xb990f0000, tail_position: 0 }, semaphore: Semaphore { semaphore: Semaphore { permits: 256 }, bound: 256 }, rx_waker: AtomicWaker, tx_count: 1, rx_fields: "..." } } }), connection_id: ConnectionId(7) }, secondary: None })
+2026-01-19T06:44:52.548063Z  INFO litep2p-perf: connection closed peer=PeerId("12D3KooWParV6Tg9DBcaRRWFdCL2JsrRLyu5hsw9cVKDg5HEh5r2")
+2026-01-19T06:44:53.462634Z DEBUG litep2p::transport-service: Last activity no longer tracks the connection (closed event triggered) peer=PeerId("12D3KooWPa7nACovFT11u9tBjCaBHSwJ4kE5P3hbCyHMC1hN6FKJ") connection_id=ConnectionId(3)
+2026-01-19T06:44:53.514796Z DEBUG litep2p::tcp::connection: accept connection address=[::1]:55113
+2026-01-19T06:44:53.515872Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /noise
+2026-01-19T06:44:53.515909Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /noise
+2026-01-19T06:44:53.515934Z DEBUG litep2p::crypto::noise: start noise handshake role=Listener ty=Tcp
+2026-01-19T06:44:53.521469Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /yamux/1.0.0
+2026-01-19T06:44:53.521504Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /yamux/1.0.0
+2026-01-19T06:44:53.521530Z DEBUG yamux::connection: new connection: 9641a240 (Server)    
+2026-01-19T06:44:53.521621Z  INFO litep2p_perf: Event: ConnectionEstablished { peer: PeerId("12D3KooWAR2BQ5upjgi3WDrjvjspjZ9JQ9JJQ9dJ3p1evs1WcAJU"), endpoint: Listener { address: "/ip6/::1/tcp/55113", connection_id: ConnectionId(8) } }
+2026-01-19T06:44:53.521672Z DEBUG yamux::connection::rtt: sending ping 3662435772    
+2026-01-19T06:44:53.521728Z DEBUG litep2p::yamux::control: Inbound stream reset state to idle other=Some(Ok(Stream { id: 1, connection: 9641a240 }))
+2026-01-19T06:44:53.521785Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /litep2p-perf/1.0.0
+2026-01-19T06:44:53.521797Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /litep2p-perf/1.0.0
+2026-01-19T06:44:53.521816Z DEBUG litep2p::protocol-set: substream opened protocol=/litep2p-perf/1.0.0 peer=PeerId("12D3KooWAR2BQ5upjgi3WDrjvjspjZ9JQ9JJQ9dJ3p1evs1WcAJU") direction=Inbound
+2026-01-19T06:44:53.521889Z DEBUG yamux::connection::rtt: received pong 3662435772, estimated round-trip-time 219.542µs    
+2026-01-19T06:44:53.521915Z DEBUG litep2p::transport-service: on connection established peer=PeerId("12D3KooWAR2BQ5upjgi3WDrjvjspjZ9JQ9JJQ9dJ3p1evs1WcAJU") endpoint=Listener { address: "/ip6/::1/tcp/55113", connection_id: ConnectionId(8) } connection_id=ConnectionId(8) protocol=/litep2p-perf/1.0.0 current_state=None
+2026-01-19T06:44:53.533117Z DEBUG litep2p::yamux::control: Inbound stream error, closing connection error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:44:53.533132Z DEBUG litep2p::tcp::connection: connection closed with error peer=PeerId("12D3KooWAR2BQ5upjgi3WDrjvjspjZ9JQ9JJQ9dJ3p1evs1WcAJU") error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:44:53.533179Z DEBUG litep2p::transport-service: on connection closed peer=PeerId("12D3KooWAR2BQ5upjgi3WDrjvjspjZ9JQ9JJQ9dJ3p1evs1WcAJU") connection_id=ConnectionId(8) protocol=/litep2p-perf/1.0.0 current_state=Some(ConnectionContext { primary: ConnectionHandle { connection: Active(Sender { chan: Tx { inner: Chan { tx: Tx { block_tail: 0xb990f0000, tail_position: 0 }, semaphore: Semaphore { semaphore: Semaphore { permits: 256 }, bound: 256 }, rx_waker: AtomicWaker, tx_count: 1, rx_fields: "..." } } }), connection_id: ConnectionId(8) }, secondary: None })
+2026-01-19T06:44:53.533181Z  INFO litep2p_perf: Event: ConnectionClosed { peer: PeerId("12D3KooWAR2BQ5upjgi3WDrjvjspjZ9JQ9JJQ9dJ3p1evs1WcAJU"), connection_id: ConnectionId(8) }
+2026-01-19T06:44:53.533216Z  INFO litep2p-perf: connection closed peer=PeerId("12D3KooWAR2BQ5upjgi3WDrjvjspjZ9JQ9JJQ9dJ3p1evs1WcAJU")
+2026-01-19T06:44:54.522547Z DEBUG litep2p::tcp::connection: accept connection address=[::1]:55114
+2026-01-19T06:44:54.523661Z DEBUG litep2p::transport-service: Last activity no longer tracks the connection (closed event triggered) peer=PeerId("12D3KooWPDGG45g346dFT5BtdGy49NdviqBfapH2QzbKSASZcZsz") connection_id=ConnectionId(4)
+2026-01-19T06:44:54.524093Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /noise
+2026-01-19T06:44:54.524131Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /noise
+2026-01-19T06:44:54.524154Z DEBUG litep2p::crypto::noise: start noise handshake role=Listener ty=Tcp
+2026-01-19T06:44:54.529105Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /yamux/1.0.0
+2026-01-19T06:44:54.529127Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /yamux/1.0.0
+2026-01-19T06:44:54.529150Z DEBUG yamux::connection: new connection: fe62e0da (Server)    
+2026-01-19T06:44:54.529226Z  INFO litep2p_perf: Event: ConnectionEstablished { peer: PeerId("12D3KooWHoaudBovwSCDruiReBaduYaDBJG7GxfhXcHP4r4AHmYx"), endpoint: Listener { address: "/ip6/::1/tcp/55114", connection_id: ConnectionId(9) } }
+2026-01-19T06:44:54.529260Z DEBUG yamux::connection::rtt: sending ping 1300416219    
+2026-01-19T06:44:54.529314Z DEBUG litep2p::yamux::control: Inbound stream reset state to idle other=Some(Ok(Stream { id: 1, connection: fe62e0da }))
+2026-01-19T06:44:54.529373Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /litep2p-perf/1.0.0
+2026-01-19T06:44:54.529387Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /litep2p-perf/1.0.0
+2026-01-19T06:44:54.529406Z DEBUG litep2p::protocol-set: substream opened protocol=/litep2p-perf/1.0.0 peer=PeerId("12D3KooWHoaudBovwSCDruiReBaduYaDBJG7GxfhXcHP4r4AHmYx") direction=Inbound
+2026-01-19T06:44:54.529480Z DEBUG yamux::connection::rtt: received pong 1300416219, estimated round-trip-time 221.416µs    
+2026-01-19T06:44:54.529503Z DEBUG litep2p::transport-service: on connection established peer=PeerId("12D3KooWHoaudBovwSCDruiReBaduYaDBJG7GxfhXcHP4r4AHmYx") endpoint=Listener { address: "/ip6/::1/tcp/55114", connection_id: ConnectionId(9) } connection_id=ConnectionId(9) protocol=/litep2p-perf/1.0.0 current_state=None
+2026-01-19T06:44:54.549303Z DEBUG litep2p::yamux::control: Inbound stream error, closing connection error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:44:54.549319Z DEBUG litep2p::tcp::connection: connection closed with error peer=PeerId("12D3KooWHoaudBovwSCDruiReBaduYaDBJG7GxfhXcHP4r4AHmYx") error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:44:54.549373Z  INFO litep2p_perf: Event: ConnectionClosed { peer: PeerId("12D3KooWHoaudBovwSCDruiReBaduYaDBJG7GxfhXcHP4r4AHmYx"), connection_id: ConnectionId(9) }
+2026-01-19T06:44:54.549376Z DEBUG litep2p::transport-service: on connection closed peer=PeerId("12D3KooWHoaudBovwSCDruiReBaduYaDBJG7GxfhXcHP4r4AHmYx") connection_id=ConnectionId(9) protocol=/litep2p-perf/1.0.0 current_state=Some(ConnectionContext { primary: ConnectionHandle { connection: Active(Sender { chan: Tx { inner: Chan { tx: Tx { block_tail: 0xb990f0000, tail_position: 0 }, semaphore: Semaphore { semaphore: Semaphore { permits: 256 }, bound: 256 }, rx_waker: AtomicWaker, tx_count: 1, rx_fields: "..." } } }), connection_id: ConnectionId(9) }, secondary: None })
+2026-01-19T06:44:54.549415Z  INFO litep2p-perf: connection closed peer=PeerId("12D3KooWHoaudBovwSCDruiReBaduYaDBJG7GxfhXcHP4r4AHmYx")
+2026-01-19T06:44:55.541102Z DEBUG litep2p::tcp::connection: accept connection address=[::1]:55115
+2026-01-19T06:44:55.542470Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /noise
+2026-01-19T06:44:55.542510Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /noise
+2026-01-19T06:44:55.542535Z DEBUG litep2p::crypto::noise: start noise handshake role=Listener ty=Tcp
+2026-01-19T06:44:55.548129Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /yamux/1.0.0
+2026-01-19T06:44:55.548166Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /yamux/1.0.0
+2026-01-19T06:44:55.548192Z DEBUG yamux::connection: new connection: f44d1ea8 (Server)    
+2026-01-19T06:44:55.548280Z  INFO litep2p_perf: Event: ConnectionEstablished { peer: PeerId("12D3KooWPUppFPGmUZLGuw2BwKnD9GuvBHC7PC63rg8qWfqzjQon"), endpoint: Listener { address: "/ip6/::1/tcp/55115", connection_id: ConnectionId(10) } }
+2026-01-19T06:44:55.548330Z DEBUG yamux::connection::rtt: sending ping 1684890275    
+2026-01-19T06:44:55.548389Z DEBUG litep2p::yamux::control: Inbound stream reset state to idle other=Some(Ok(Stream { id: 1, connection: f44d1ea8 }))
+2026-01-19T06:44:55.548446Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /litep2p-perf/1.0.0
+2026-01-19T06:44:55.548459Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /litep2p-perf/1.0.0
+2026-01-19T06:44:55.548478Z DEBUG litep2p::protocol-set: substream opened protocol=/litep2p-perf/1.0.0 peer=PeerId("12D3KooWPUppFPGmUZLGuw2BwKnD9GuvBHC7PC63rg8qWfqzjQon") direction=Inbound
+2026-01-19T06:44:55.548553Z DEBUG yamux::connection::rtt: received pong 1684890275, estimated round-trip-time 224.625µs    
+2026-01-19T06:44:55.548579Z DEBUG litep2p::transport-service: on connection established peer=PeerId("12D3KooWPUppFPGmUZLGuw2BwKnD9GuvBHC7PC63rg8qWfqzjQon") endpoint=Listener { address: "/ip6/::1/tcp/55115", connection_id: ConnectionId(10) } connection_id=ConnectionId(10) protocol=/litep2p-perf/1.0.0 current_state=None
+2026-01-19T06:44:55.580634Z DEBUG litep2p::transport-service: Last activity no longer tracks the connection (closed event triggered) peer=PeerId("12D3KooWJRsACdTzGz1XwrU2DodUUbca6DBxUndN1KYzQTQPB5VC") connection_id=ConnectionId(5)
+2026-01-19T06:44:55.581177Z DEBUG litep2p::yamux::control: Inbound stream error, closing connection error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:44:55.581189Z DEBUG litep2p::tcp::connection: connection closed with error peer=PeerId("12D3KooWPUppFPGmUZLGuw2BwKnD9GuvBHC7PC63rg8qWfqzjQon") error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:44:55.581229Z DEBUG litep2p::transport-service: on connection closed peer=PeerId("12D3KooWPUppFPGmUZLGuw2BwKnD9GuvBHC7PC63rg8qWfqzjQon") connection_id=ConnectionId(10) protocol=/litep2p-perf/1.0.0 current_state=Some(ConnectionContext { primary: ConnectionHandle { connection: Active(Sender { chan: Tx { inner: Chan { tx: Tx { block_tail: 0xb990f0000, tail_position: 0 }, semaphore: Semaphore { semaphore: Semaphore { permits: 256 }, bound: 256 }, rx_waker: AtomicWaker, tx_count: 1, rx_fields: "..." } } }), connection_id: ConnectionId(10) }, secondary: None })
+2026-01-19T06:44:55.581236Z  INFO litep2p_perf: Event: ConnectionClosed { peer: PeerId("12D3KooWPUppFPGmUZLGuw2BwKnD9GuvBHC7PC63rg8qWfqzjQon"), connection_id: ConnectionId(10) }
+2026-01-19T06:44:55.581252Z  INFO litep2p-perf: connection closed peer=PeerId("12D3KooWPUppFPGmUZLGuw2BwKnD9GuvBHC7PC63rg8qWfqzjQon")
+2026-01-19T06:44:56.561060Z DEBUG litep2p::tcp::connection: accept connection address=[::1]:55116
+2026-01-19T06:44:56.562146Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /noise
+2026-01-19T06:44:56.562172Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /noise
+2026-01-19T06:44:56.562195Z DEBUG litep2p::crypto::noise: start noise handshake role=Listener ty=Tcp
+2026-01-19T06:44:56.565611Z DEBUG litep2p::transport-service: Last activity no longer tracks the connection (closed event triggered) peer=PeerId("12D3KooWPWaVHUjfqp5ZokaBjKdjV6WARwk1jo91jCaUX5TCArYz") connection_id=ConnectionId(6)
+2026-01-19T06:44:56.567272Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /yamux/1.0.0
+2026-01-19T06:44:56.567307Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /yamux/1.0.0
+2026-01-19T06:44:56.567333Z DEBUG yamux::connection: new connection: 07aeafeb (Server)    
+2026-01-19T06:44:56.567417Z  INFO litep2p_perf: Event: ConnectionEstablished { peer: PeerId("12D3KooWGVQSKnnT6PgjffpSSnX4ggxzCnVWhPjAonB5kCCVD1Yj"), endpoint: Listener { address: "/ip6/::1/tcp/55116", connection_id: ConnectionId(11) } }
+2026-01-19T06:44:56.567467Z DEBUG yamux::connection::rtt: sending ping 2571671356    
+2026-01-19T06:44:56.567537Z DEBUG litep2p::yamux::control: Inbound stream reset state to idle other=Some(Ok(Stream { id: 1, connection: 07aeafeb }))
+2026-01-19T06:44:56.567599Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /litep2p-perf/1.0.0
+2026-01-19T06:44:56.567615Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /litep2p-perf/1.0.0
+2026-01-19T06:44:56.567635Z DEBUG litep2p::protocol-set: substream opened protocol=/litep2p-perf/1.0.0 peer=PeerId("12D3KooWGVQSKnnT6PgjffpSSnX4ggxzCnVWhPjAonB5kCCVD1Yj") direction=Inbound
+2026-01-19T06:44:56.567710Z DEBUG yamux::connection::rtt: received pong 2571671356, estimated round-trip-time 246.792µs    
+2026-01-19T06:44:56.567733Z DEBUG litep2p::transport-service: on connection established peer=PeerId("12D3KooWGVQSKnnT6PgjffpSSnX4ggxzCnVWhPjAonB5kCCVD1Yj") endpoint=Listener { address: "/ip6/::1/tcp/55116", connection_id: ConnectionId(11) } connection_id=ConnectionId(11) protocol=/litep2p-perf/1.0.0 current_state=None
+2026-01-19T06:44:56.621494Z DEBUG litep2p::yamux::control: Inbound stream error, closing connection error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:44:56.621504Z DEBUG litep2p::tcp::connection: connection closed with error peer=PeerId("12D3KooWGVQSKnnT6PgjffpSSnX4ggxzCnVWhPjAonB5kCCVD1Yj") error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:44:56.621536Z DEBUG litep2p::transport-service: on connection closed peer=PeerId("12D3KooWGVQSKnnT6PgjffpSSnX4ggxzCnVWhPjAonB5kCCVD1Yj") connection_id=ConnectionId(11) protocol=/litep2p-perf/1.0.0 current_state=Some(ConnectionContext { primary: ConnectionHandle { connection: Active(Sender { chan: Tx { inner: Chan { tx: Tx { block_tail: 0xb990f0000, tail_position: 0 }, semaphore: Semaphore { semaphore: Semaphore { permits: 256 }, bound: 256 }, rx_waker: AtomicWaker, tx_count: 1, rx_fields: "..." } } }), connection_id: ConnectionId(11) }, secondary: None })
+2026-01-19T06:44:56.621546Z  INFO litep2p_perf: Event: ConnectionClosed { peer: PeerId("12D3KooWGVQSKnnT6PgjffpSSnX4ggxzCnVWhPjAonB5kCCVD1Yj"), connection_id: ConnectionId(11) }
+2026-01-19T06:44:56.621554Z  INFO litep2p-perf: connection closed peer=PeerId("12D3KooWGVQSKnnT6PgjffpSSnX4ggxzCnVWhPjAonB5kCCVD1Yj")
+2026-01-19T06:44:57.542824Z DEBUG litep2p::transport-service: Last activity no longer tracks the connection (closed event triggered) peer=PeerId("12D3KooWParV6Tg9DBcaRRWFdCL2JsrRLyu5hsw9cVKDg5HEh5r2") connection_id=ConnectionId(7)
+2026-01-19T06:44:57.599612Z DEBUG litep2p::tcp::connection: accept connection address=[::1]:55117
+2026-01-19T06:44:57.600811Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /noise
+2026-01-19T06:44:57.600844Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /noise
+2026-01-19T06:44:57.600866Z DEBUG litep2p::crypto::noise: start noise handshake role=Listener ty=Tcp
+2026-01-19T06:44:57.606133Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /yamux/1.0.0
+2026-01-19T06:44:57.606169Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /yamux/1.0.0
+2026-01-19T06:44:57.606193Z DEBUG yamux::connection: new connection: 8f8ffd23 (Server)    
+2026-01-19T06:44:57.606278Z  INFO litep2p_perf: Event: ConnectionEstablished { peer: PeerId("12D3KooWJwzj3VLzYtSzS1iHHPD8VhznFubeujmfamFy4nwZffjX"), endpoint: Listener { address: "/ip6/::1/tcp/55117", connection_id: ConnectionId(12) } }
+2026-01-19T06:44:57.606331Z DEBUG yamux::connection::rtt: sending ping 3958827715    
+2026-01-19T06:44:57.606404Z DEBUG litep2p::yamux::control: Inbound stream reset state to idle other=Some(Ok(Stream { id: 1, connection: 8f8ffd23 }))
+2026-01-19T06:44:57.606457Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /litep2p-perf/1.0.0
+2026-01-19T06:44:57.606471Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /litep2p-perf/1.0.0
+2026-01-19T06:44:57.606491Z DEBUG litep2p::protocol-set: substream opened protocol=/litep2p-perf/1.0.0 peer=PeerId("12D3KooWJwzj3VLzYtSzS1iHHPD8VhznFubeujmfamFy4nwZffjX") direction=Inbound
+2026-01-19T06:44:57.606582Z DEBUG yamux::connection::rtt: received pong 3958827715, estimated round-trip-time 251.75µs    
+2026-01-19T06:44:57.606609Z DEBUG litep2p::transport-service: on connection established peer=PeerId("12D3KooWJwzj3VLzYtSzS1iHHPD8VhznFubeujmfamFy4nwZffjX") endpoint=Listener { address: "/ip6/::1/tcp/55117", connection_id: ConnectionId(12) } connection_id=ConnectionId(12) protocol=/litep2p-perf/1.0.0 current_state=None
+2026-01-19T06:44:57.701428Z DEBUG litep2p::yamux::control: Inbound stream error, closing connection error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:44:57.701442Z DEBUG litep2p::tcp::connection: connection closed with error peer=PeerId("12D3KooWJwzj3VLzYtSzS1iHHPD8VhznFubeujmfamFy4nwZffjX") error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:44:57.701548Z  INFO litep2p_perf: Event: ConnectionClosed { peer: PeerId("12D3KooWJwzj3VLzYtSzS1iHHPD8VhznFubeujmfamFy4nwZffjX"), connection_id: ConnectionId(12) }
+2026-01-19T06:44:57.701549Z DEBUG litep2p::transport-service: on connection closed peer=PeerId("12D3KooWJwzj3VLzYtSzS1iHHPD8VhznFubeujmfamFy4nwZffjX") connection_id=ConnectionId(12) protocol=/litep2p-perf/1.0.0 current_state=Some(ConnectionContext { primary: ConnectionHandle { connection: Active(Sender { chan: Tx { inner: Chan { tx: Tx { block_tail: 0xb990f0000, tail_position: 0 }, semaphore: Semaphore { semaphore: Semaphore { permits: 256 }, bound: 256 }, rx_waker: AtomicWaker, tx_count: 1, rx_fields: "..." } } }), connection_id: ConnectionId(12) }, secondary: None })
+2026-01-19T06:44:57.701576Z  INFO litep2p-perf: connection closed peer=PeerId("12D3KooWJwzj3VLzYtSzS1iHHPD8VhznFubeujmfamFy4nwZffjX")
+2026-01-19T06:44:58.522728Z DEBUG litep2p::transport-service: Last activity no longer tracks the connection (closed event triggered) peer=PeerId("12D3KooWAR2BQ5upjgi3WDrjvjspjZ9JQ9JJQ9dJ3p1evs1WcAJU") connection_id=ConnectionId(8)
+2026-01-19T06:44:58.667564Z DEBUG litep2p::tcp::connection: accept connection address=[::1]:55118
+2026-01-19T06:44:58.668995Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /noise
+2026-01-19T06:44:58.669038Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /noise
+2026-01-19T06:44:58.669060Z DEBUG litep2p::crypto::noise: start noise handshake role=Listener ty=Tcp
+2026-01-19T06:44:58.674752Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /yamux/1.0.0
+2026-01-19T06:44:58.674776Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /yamux/1.0.0
+2026-01-19T06:44:58.674803Z DEBUG yamux::connection: new connection: bc3e7e16 (Server)    
+2026-01-19T06:44:58.674891Z  INFO litep2p_perf: Event: ConnectionEstablished { peer: PeerId("12D3KooWA1QdyC3RCfpSJssw1SuUxiUbMHT67drf5NptyhDBMgZG"), endpoint: Listener { address: "/ip6/::1/tcp/55118", connection_id: ConnectionId(13) } }
+2026-01-19T06:44:58.674935Z DEBUG yamux::connection::rtt: sending ping 2875114371    
+2026-01-19T06:44:58.674995Z DEBUG litep2p::yamux::control: Inbound stream reset state to idle other=Some(Ok(Stream { id: 1, connection: bc3e7e16 }))
+2026-01-19T06:44:58.675057Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /litep2p-perf/1.0.0
+2026-01-19T06:44:58.675071Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /litep2p-perf/1.0.0
+2026-01-19T06:44:58.675091Z DEBUG litep2p::protocol-set: substream opened protocol=/litep2p-perf/1.0.0 peer=PeerId("12D3KooWA1QdyC3RCfpSJssw1SuUxiUbMHT67drf5NptyhDBMgZG") direction=Inbound
+2026-01-19T06:44:58.675161Z DEBUG yamux::connection::rtt: received pong 2875114371, estimated round-trip-time 228.209µs    
+2026-01-19T06:44:58.675187Z DEBUG litep2p::transport-service: on connection established peer=PeerId("12D3KooWA1QdyC3RCfpSJssw1SuUxiUbMHT67drf5NptyhDBMgZG") endpoint=Listener { address: "/ip6/::1/tcp/55118", connection_id: ConnectionId(13) } connection_id=ConnectionId(13) protocol=/litep2p-perf/1.0.0 current_state=None
+2026-01-19T06:44:58.847974Z DEBUG litep2p::yamux::control: Inbound stream error, closing connection error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:44:58.847989Z DEBUG litep2p::tcp::connection: connection closed with error peer=PeerId("12D3KooWA1QdyC3RCfpSJssw1SuUxiUbMHT67drf5NptyhDBMgZG") error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:44:58.848034Z DEBUG litep2p::transport-service: on connection closed peer=PeerId("12D3KooWA1QdyC3RCfpSJssw1SuUxiUbMHT67drf5NptyhDBMgZG") connection_id=ConnectionId(13) protocol=/litep2p-perf/1.0.0 current_state=Some(ConnectionContext { primary: ConnectionHandle { connection: Active(Sender { chan: Tx { inner: Chan { tx: Tx { block_tail: 0xb990f0000, tail_position: 0 }, semaphore: Semaphore { semaphore: Semaphore { permits: 256 }, bound: 256 }, rx_waker: AtomicWaker, tx_count: 1, rx_fields: "..." } } }), connection_id: ConnectionId(13) }, secondary: None })
+2026-01-19T06:44:58.848054Z  INFO litep2p-perf: connection closed peer=PeerId("12D3KooWA1QdyC3RCfpSJssw1SuUxiUbMHT67drf5NptyhDBMgZG")
+2026-01-19T06:44:58.848053Z  INFO litep2p_perf: Event: ConnectionClosed { peer: PeerId("12D3KooWA1QdyC3RCfpSJssw1SuUxiUbMHT67drf5NptyhDBMgZG"), connection_id: ConnectionId(13) }
+2026-01-19T06:44:59.530424Z DEBUG litep2p::transport-service: Last activity no longer tracks the connection (closed event triggered) peer=PeerId("12D3KooWHoaudBovwSCDruiReBaduYaDBJG7GxfhXcHP4r4AHmYx") connection_id=ConnectionId(9)
+2026-01-19T06:44:59.812965Z DEBUG litep2p::tcp::connection: accept connection address=[::1]:55119
+2026-01-19T06:44:59.814018Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /noise
+2026-01-19T06:44:59.814057Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /noise
+2026-01-19T06:44:59.814079Z DEBUG litep2p::crypto::noise: start noise handshake role=Listener ty=Tcp
+2026-01-19T06:44:59.819685Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /yamux/1.0.0
+2026-01-19T06:44:59.819721Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /yamux/1.0.0
+2026-01-19T06:44:59.819744Z DEBUG yamux::connection: new connection: d5de213e (Server)    
+2026-01-19T06:44:59.819845Z  INFO litep2p_perf: Event: ConnectionEstablished { peer: PeerId("12D3KooWLCDW2Fe68kKydfNCerSqWL929hKkrFnbYXQpfD3vDGum"), endpoint: Listener { address: "/ip6/::1/tcp/55119", connection_id: ConnectionId(14) } }
+2026-01-19T06:44:59.819893Z DEBUG yamux::connection::rtt: sending ping 366950460    
+2026-01-19T06:44:59.819954Z DEBUG litep2p::yamux::control: Inbound stream reset state to idle other=Some(Ok(Stream { id: 1, connection: d5de213e }))
+2026-01-19T06:44:59.820012Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /litep2p-perf/1.0.0
+2026-01-19T06:44:59.820031Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /litep2p-perf/1.0.0
+2026-01-19T06:44:59.820052Z DEBUG litep2p::protocol-set: substream opened protocol=/litep2p-perf/1.0.0 peer=PeerId("12D3KooWLCDW2Fe68kKydfNCerSqWL929hKkrFnbYXQpfD3vDGum") direction=Inbound
+2026-01-19T06:44:59.820137Z DEBUG yamux::connection::rtt: received pong 366950460, estimated round-trip-time 244.875µs    
+2026-01-19T06:44:59.820166Z DEBUG litep2p::transport-service: on connection established peer=PeerId("12D3KooWLCDW2Fe68kKydfNCerSqWL929hKkrFnbYXQpfD3vDGum") endpoint=Listener { address: "/ip6/::1/tcp/55119", connection_id: ConnectionId(14) } connection_id=ConnectionId(14) protocol=/litep2p-perf/1.0.0 current_state=None
+2026-01-19T06:45:00.157458Z DEBUG litep2p::yamux::control: Inbound stream error, closing connection error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:45:00.157481Z DEBUG litep2p::tcp::connection: connection closed with error peer=PeerId("12D3KooWLCDW2Fe68kKydfNCerSqWL929hKkrFnbYXQpfD3vDGum") error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:45:00.157549Z  INFO litep2p_perf: Event: ConnectionClosed { peer: PeerId("12D3KooWLCDW2Fe68kKydfNCerSqWL929hKkrFnbYXQpfD3vDGum"), connection_id: ConnectionId(14) }
+2026-01-19T06:45:00.157547Z DEBUG litep2p::transport-service: on connection closed peer=PeerId("12D3KooWLCDW2Fe68kKydfNCerSqWL929hKkrFnbYXQpfD3vDGum") connection_id=ConnectionId(14) protocol=/litep2p-perf/1.0.0 current_state=Some(ConnectionContext { primary: ConnectionHandle { connection: Active(Sender { chan: Tx { inner: Chan { tx: Tx { block_tail: 0xb990f0000, tail_position: 0 }, semaphore: Semaphore { semaphore: Semaphore { permits: 256 }, bound: 256 }, rx_waker: AtomicWaker, tx_count: 1, rx_fields: "..." } } }), connection_id: ConnectionId(14) }, secondary: None })
+2026-01-19T06:45:00.157602Z  INFO litep2p-perf: connection closed peer=PeerId("12D3KooWLCDW2Fe68kKydfNCerSqWL929hKkrFnbYXQpfD3vDGum")
+2026-01-19T06:45:00.550124Z DEBUG litep2p::transport-service: Last activity no longer tracks the connection (closed event triggered) peer=PeerId("12D3KooWPUppFPGmUZLGuw2BwKnD9GuvBHC7PC63rg8qWfqzjQon") connection_id=ConnectionId(10)
+2026-01-19T06:45:01.173798Z DEBUG litep2p::tcp::connection: accept connection address=[::1]:55120
+2026-01-19T06:45:01.174885Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /noise
+2026-01-19T06:45:01.174924Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /noise
+2026-01-19T06:45:01.174948Z DEBUG litep2p::crypto::noise: start noise handshake role=Listener ty=Tcp
+2026-01-19T06:45:01.180501Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /yamux/1.0.0
+2026-01-19T06:45:01.180539Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /yamux/1.0.0
+2026-01-19T06:45:01.180564Z DEBUG yamux::connection: new connection: 025b5182 (Server)    
+2026-01-19T06:45:01.180651Z  INFO litep2p_perf: Event: ConnectionEstablished { peer: PeerId("12D3KooWPtrouZ6FLtHdTayMRHTEqsgr6PxZJL9MwYqm5uiAqA7u"), endpoint: Listener { address: "/ip6/::1/tcp/55120", connection_id: ConnectionId(15) } }
+2026-01-19T06:45:01.180695Z DEBUG yamux::connection::rtt: sending ping 3667820646    
+2026-01-19T06:45:01.180758Z DEBUG litep2p::yamux::control: Inbound stream reset state to idle other=Some(Ok(Stream { id: 1, connection: 025b5182 }))
+2026-01-19T06:45:01.180819Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /litep2p-perf/1.0.0
+2026-01-19T06:45:01.180832Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /litep2p-perf/1.0.0
+2026-01-19T06:45:01.180851Z DEBUG litep2p::protocol-set: substream opened protocol=/litep2p-perf/1.0.0 peer=PeerId("12D3KooWPtrouZ6FLtHdTayMRHTEqsgr6PxZJL9MwYqm5uiAqA7u") direction=Inbound
+2026-01-19T06:45:01.180918Z DEBUG yamux::connection::rtt: received pong 3667820646, estimated round-trip-time 224.792µs    
+2026-01-19T06:45:01.180946Z DEBUG litep2p::transport-service: on connection established peer=PeerId("12D3KooWPtrouZ6FLtHdTayMRHTEqsgr6PxZJL9MwYqm5uiAqA7u") endpoint=Listener { address: "/ip6/::1/tcp/55120", connection_id: ConnectionId(15) } connection_id=ConnectionId(15) protocol=/litep2p-perf/1.0.0 current_state=None
+2026-01-19T06:45:01.568617Z DEBUG litep2p::transport-service: Last activity no longer tracks the connection (closed event triggered) peer=PeerId("12D3KooWGVQSKnnT6PgjffpSSnX4ggxzCnVWhPjAonB5kCCVD1Yj") connection_id=ConnectionId(11)
+2026-01-19T06:45:01.840541Z DEBUG litep2p::yamux::control: Inbound stream error, closing connection error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:45:01.840593Z DEBUG litep2p::tcp::connection: connection closed with error peer=PeerId("12D3KooWPtrouZ6FLtHdTayMRHTEqsgr6PxZJL9MwYqm5uiAqA7u") error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:45:01.840671Z DEBUG litep2p::transport-service: on connection closed peer=PeerId("12D3KooWPtrouZ6FLtHdTayMRHTEqsgr6PxZJL9MwYqm5uiAqA7u") connection_id=ConnectionId(15) protocol=/litep2p-perf/1.0.0 current_state=Some(ConnectionContext { primary: ConnectionHandle { connection: Active(Sender { chan: Tx { inner: Chan { tx: Tx { block_tail: 0xb990f0000, tail_position: 0 }, semaphore: Semaphore { semaphore: Semaphore { permits: 256 }, bound: 256 }, rx_waker: AtomicWaker, tx_count: 1, rx_fields: "..." } } }), connection_id: ConnectionId(15) }, secondary: None })
+2026-01-19T06:45:01.840676Z  INFO litep2p_perf: Event: ConnectionClosed { peer: PeerId("12D3KooWPtrouZ6FLtHdTayMRHTEqsgr6PxZJL9MwYqm5uiAqA7u"), connection_id: ConnectionId(15) }
+2026-01-19T06:45:01.840708Z  INFO litep2p-perf: connection closed peer=PeerId("12D3KooWPtrouZ6FLtHdTayMRHTEqsgr6PxZJL9MwYqm5uiAqA7u")
+2026-01-19T06:45:02.608898Z DEBUG litep2p::transport-service: Last activity no longer tracks the connection (closed event triggered) peer=PeerId("12D3KooWJwzj3VLzYtSzS1iHHPD8VhznFubeujmfamFy4nwZffjX") connection_id=ConnectionId(12)
+2026-01-19T06:45:02.817138Z DEBUG litep2p::tcp::connection: accept connection address=[::1]:55121
+2026-01-19T06:45:02.818569Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /noise
+2026-01-19T06:45:02.818606Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /noise
+2026-01-19T06:45:02.818626Z DEBUG litep2p::crypto::noise: start noise handshake role=Listener ty=Tcp
+2026-01-19T06:45:02.824369Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /yamux/1.0.0
+2026-01-19T06:45:02.824402Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /yamux/1.0.0
+2026-01-19T06:45:02.824424Z DEBUG yamux::connection: new connection: e214d06b (Server)    
+2026-01-19T06:45:02.824517Z  INFO litep2p_perf: Event: ConnectionEstablished { peer: PeerId("12D3KooWJKX1e7ZDGdF8ertM1EUc2TU5aZ5yUpNZEWGXDq5mEbgh"), endpoint: Listener { address: "/ip6/::1/tcp/55121", connection_id: ConnectionId(16) } }
+2026-01-19T06:45:02.824568Z DEBUG yamux::connection::rtt: sending ping 1939659047    
+2026-01-19T06:45:02.824631Z DEBUG litep2p::yamux::control: Inbound stream reset state to idle other=Some(Ok(Stream { id: 1, connection: e214d06b }))
+2026-01-19T06:45:02.824685Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /litep2p-perf/1.0.0
+2026-01-19T06:45:02.824699Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /litep2p-perf/1.0.0
+2026-01-19T06:45:02.824720Z DEBUG litep2p::protocol-set: substream opened protocol=/litep2p-perf/1.0.0 peer=PeerId("12D3KooWJKX1e7ZDGdF8ertM1EUc2TU5aZ5yUpNZEWGXDq5mEbgh") direction=Inbound
+2026-01-19T06:45:02.824813Z DEBUG yamux::connection::rtt: received pong 1939659047, estimated round-trip-time 247.042µs    
+2026-01-19T06:45:02.824841Z DEBUG litep2p::transport-service: on connection established peer=PeerId("12D3KooWJKX1e7ZDGdF8ertM1EUc2TU5aZ5yUpNZEWGXDq5mEbgh") endpoint=Listener { address: "/ip6/::1/tcp/55121", connection_id: ConnectionId(16) } connection_id=ConnectionId(16) protocol=/litep2p-perf/1.0.0 current_state=None
+2026-01-19T06:45:03.675617Z DEBUG litep2p::transport-service: Last activity no longer tracks the connection (closed event triggered) peer=PeerId("12D3KooWA1QdyC3RCfpSJssw1SuUxiUbMHT67drf5NptyhDBMgZG") connection_id=ConnectionId(13)
+2026-01-19T06:45:04.126039Z DEBUG litep2p::yamux::control: Inbound stream error, closing connection error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:45:04.126051Z DEBUG litep2p::tcp::connection: connection closed with error peer=PeerId("12D3KooWJKX1e7ZDGdF8ertM1EUc2TU5aZ5yUpNZEWGXDq5mEbgh") error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:45:04.126092Z DEBUG litep2p::transport-service: on connection closed peer=PeerId("12D3KooWJKX1e7ZDGdF8ertM1EUc2TU5aZ5yUpNZEWGXDq5mEbgh") connection_id=ConnectionId(16) protocol=/litep2p-perf/1.0.0 current_state=Some(ConnectionContext { primary: ConnectionHandle { connection: Active(Sender { chan: Tx { inner: Chan { tx: Tx { block_tail: 0xb990f0000, tail_position: 0 }, semaphore: Semaphore { semaphore: Semaphore { permits: 256 }, bound: 256 }, rx_waker: AtomicWaker, tx_count: 1, rx_fields: "..." } } }), connection_id: ConnectionId(16) }, secondary: None })
+2026-01-19T06:45:04.126101Z  INFO litep2p_perf: Event: ConnectionClosed { peer: PeerId("12D3KooWJKX1e7ZDGdF8ertM1EUc2TU5aZ5yUpNZEWGXDq5mEbgh"), connection_id: ConnectionId(16) }
+2026-01-19T06:45:04.126122Z  INFO litep2p-perf: connection closed peer=PeerId("12D3KooWJKX1e7ZDGdF8ertM1EUc2TU5aZ5yUpNZEWGXDq5mEbgh")
+2026-01-19T06:45:04.822298Z DEBUG litep2p::transport-service: Last activity no longer tracks the connection (closed event triggered) peer=PeerId("12D3KooWLCDW2Fe68kKydfNCerSqWL929hKkrFnbYXQpfD3vDGum") connection_id=ConnectionId(14)
+2026-01-19T06:45:05.117647Z DEBUG litep2p::tcp::connection: accept connection address=[::1]:55122
+2026-01-19T06:45:05.118806Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /noise
+2026-01-19T06:45:05.118846Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /noise
+2026-01-19T06:45:05.118870Z DEBUG litep2p::crypto::noise: start noise handshake role=Listener ty=Tcp
+2026-01-19T06:45:05.124443Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /yamux/1.0.0
+2026-01-19T06:45:05.124476Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /yamux/1.0.0
+2026-01-19T06:45:05.124500Z DEBUG yamux::connection: new connection: 88f6d1d8 (Server)    
+2026-01-19T06:45:05.124595Z  INFO litep2p_perf: Event: ConnectionEstablished { peer: PeerId("12D3KooWAsAcniGTXDmCnHvV9AfSpVDDsiJ9h6ypGY3SEYPy8w3X"), endpoint: Listener { address: "/ip6/::1/tcp/55122", connection_id: ConnectionId(17) } }
+2026-01-19T06:45:05.124647Z DEBUG yamux::connection::rtt: sending ping 3533619691    
+2026-01-19T06:45:05.124709Z DEBUG litep2p::yamux::control: Inbound stream reset state to idle other=Some(Ok(Stream { id: 1, connection: 88f6d1d8 }))
+2026-01-19T06:45:05.124762Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /litep2p-perf/1.0.0
+2026-01-19T06:45:05.124776Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /litep2p-perf/1.0.0
+2026-01-19T06:45:05.124796Z DEBUG litep2p::protocol-set: substream opened protocol=/litep2p-perf/1.0.0 peer=PeerId("12D3KooWAsAcniGTXDmCnHvV9AfSpVDDsiJ9h6ypGY3SEYPy8w3X") direction=Inbound
+2026-01-19T06:45:05.124876Z DEBUG yamux::connection::rtt: received pong 3533619691, estimated round-trip-time 230.625µs    
+2026-01-19T06:45:05.124904Z DEBUG litep2p::transport-service: on connection established peer=PeerId("12D3KooWAsAcniGTXDmCnHvV9AfSpVDDsiJ9h6ypGY3SEYPy8w3X") endpoint=Listener { address: "/ip6/::1/tcp/55122", connection_id: ConnectionId(17) } connection_id=ConnectionId(17) protocol=/litep2p-perf/1.0.0 current_state=None
+2026-01-19T06:45:06.181615Z DEBUG litep2p::transport-service: Last activity no longer tracks the connection (closed event triggered) peer=PeerId("12D3KooWPtrouZ6FLtHdTayMRHTEqsgr6PxZJL9MwYqm5uiAqA7u") connection_id=ConnectionId(15)
+2026-01-19T06:45:07.725058Z DEBUG litep2p::yamux::control: Inbound stream error, closing connection error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:45:07.725082Z DEBUG litep2p::tcp::connection: connection closed with error peer=PeerId("12D3KooWAsAcniGTXDmCnHvV9AfSpVDDsiJ9h6ypGY3SEYPy8w3X") error=Decode(Io(Kind(UnexpectedEof)))
+2026-01-19T06:45:07.725147Z DEBUG litep2p::transport-service: on connection closed peer=PeerId("12D3KooWAsAcniGTXDmCnHvV9AfSpVDDsiJ9h6ypGY3SEYPy8w3X") connection_id=ConnectionId(17) protocol=/litep2p-perf/1.0.0 current_state=Some(ConnectionContext { primary: ConnectionHandle { connection: Active(Sender { chan: Tx { inner: Chan { tx: Tx { block_tail: 0xb990f0000, tail_position: 0 }, semaphore: Semaphore { semaphore: Semaphore { permits: 256 }, bound: 256 }, rx_waker: AtomicWaker, tx_count: 1, rx_fields: "..." } } }), connection_id: ConnectionId(17) }, secondary: None })
+2026-01-19T06:45:07.725149Z  INFO litep2p_perf: Event: ConnectionClosed { peer: PeerId("12D3KooWAsAcniGTXDmCnHvV9AfSpVDDsiJ9h6ypGY3SEYPy8w3X"), connection_id: ConnectionId(17) }
+2026-01-19T06:45:07.725177Z  INFO litep2p-perf: connection closed peer=PeerId("12D3KooWAsAcniGTXDmCnHvV9AfSpVDDsiJ9h6ypGY3SEYPy8w3X")
+2026-01-19T06:45:07.826684Z DEBUG litep2p::transport-service: Last activity no longer tracks the connection (closed event triggered) peer=PeerId("12D3KooWJKX1e7ZDGdF8ertM1EUc2TU5aZ5yUpNZEWGXDq5mEbgh") connection_id=ConnectionId(16)
+2026-01-19T06:45:08.682982Z DEBUG litep2p::tcp::connection: accept connection address=[::1]:55123
+2026-01-19T06:45:08.684459Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /noise
+2026-01-19T06:45:08.684498Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /noise
+2026-01-19T06:45:08.684523Z DEBUG litep2p::crypto::noise: start noise handshake role=Listener ty=Tcp
+2026-01-19T06:45:08.690310Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /yamux/1.0.0
+2026-01-19T06:45:08.690333Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /yamux/1.0.0
+2026-01-19T06:45:08.690356Z DEBUG yamux::connection: new connection: 7929eaf3 (Server)    
+2026-01-19T06:45:08.690443Z  INFO litep2p_perf: Event: ConnectionEstablished { peer: PeerId("12D3KooWSVkkfPojycnbgVHneaS1GjE8RFNwGcN4Qgc5333of713"), endpoint: Listener { address: "/ip6/::1/tcp/55123", connection_id: ConnectionId(18) } }
+2026-01-19T06:45:08.690488Z DEBUG yamux::connection::rtt: sending ping 3954944759    
+2026-01-19T06:45:08.690566Z DEBUG litep2p::yamux::control: Inbound stream reset state to idle other=Some(Ok(Stream { id: 1, connection: 7929eaf3 }))
+2026-01-19T06:45:08.690632Z DEBUG litep2p::multistream_select::listener_select: Listener: confirming protocol: /litep2p-perf/1.0.0
+2026-01-19T06:45:08.690647Z DEBUG litep2p::multistream_select::listener_select: Listener: sent confirmed protocol: /litep2p-perf/1.0.0
+2026-01-19T06:45:08.690668Z DEBUG litep2p::protocol-set: substream opened protocol=/litep2p-perf/1.0.0 peer=PeerId("12D3KooWSVkkfPojycnbgVHneaS1GjE8RFNwGcN4Qgc5333of713") direction=Inbound
+2026-01-19T06:45:08.690750Z DEBUG yamux::connection::rtt: received pong 3954944759, estimated round-trip-time 263.125µs    
+2026-01-19T06:45:08.690777Z DEBUG litep2p::transport-service: on connection established peer=PeerId("12D3KooWSVkkfPojycnbgVHneaS1GjE8RFNwGcN4Qgc5333of713") endpoint=Listener { address: "/ip6/::1/tcp/55123", connection_id: ConnectionId(18) } connection_id=ConnectionId(18) protocol=/litep2p-perf/1.0.0 current_state=None
+2026-01-19T06:45:10.125607Z DEBUG litep2p::transport-service: Last activity no longer tracks the connection (closed event triggered) peer=PeerId("12D3KooWAsAcniGTXDmCnHvV9AfSpVDDsiJ9h6ypGY3SEYPy8w3X") connection_id=ConnectionId(17)
+2026-01-19T06:45:13.691628Z DEBUG litep2p::transport-service: keep-alive timeout triggered peer=PeerId("12D3KooWSVkkfPojycnbgVHneaS1GjE8RFNwGcN4Qgc5333of713") connection_id=ConnectionId(18)
+2026-01-19T06:45:13.691683Z DEBUG litep2p::transport-service: keep-alive timeout over, downgrade connection peer=PeerId("12D3KooWSVkkfPojycnbgVHneaS1GjE8RFNwGcN4Qgc5333of713") connection_id=ConnectionId(18) protocol=Static("/litep2p-perf/1.0.0") duration=5s
+2026-01-19T06:45:13.917236Z DEBUG litep2p::tcp::connection: protocols have disconnected, closing connection
+2026-01-19T06:45:13.917304Z  INFO litep2p_perf: Event: ConnectionClosed { peer: PeerId("12D3KooWSVkkfPojycnbgVHneaS1GjE8RFNwGcN4Qgc5333of713"), connection_id: ConnectionId(18) }
+2026-01-19T06:45:13.917327Z DEBUG litep2p::transport-service: on connection closed peer=PeerId("12D3KooWSVkkfPojycnbgVHneaS1GjE8RFNwGcN4Qgc5333of713") connection_id=ConnectionId(18) protocol=/litep2p-perf/1.0.0 current_state=Some(ConnectionContext { primary: ConnectionHandle { connection: Inactive(WeakSender), connection_id: ConnectionId(18) }, secondary: None })
+2026-01-19T06:45:13.917351Z  INFO litep2p-perf: connection closed peer=PeerId("12D3KooWSVkkfPojycnbgVHneaS1GjE8RFNwGcN4Qgc5333of713")
