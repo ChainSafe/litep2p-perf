@@ -52,6 +52,7 @@ enum Flag {
     Fin,
     StopSending,
     ResetStream,
+    FinAck,
 }
 
 impl std::fmt::Display for Flag {
@@ -60,6 +61,7 @@ impl std::fmt::Display for Flag {
             Flag::Fin => write!(f, "FIN"),
             Flag::StopSending => write!(f, "STOP_SENDING"),
             Flag::ResetStream => write!(f, "RESET_STREAM"),
+            Flag::FinAck => write!(f, "FIN_ACK"),
         }
     }
 }
@@ -330,6 +332,7 @@ fn decode_webrtc_messages(
                 0 => Some(Flag::Fin),
                 1 => Some(Flag::StopSending),
                 2 => Some(Flag::ResetStream),
+                3 => Some(Flag::FinAck),
                 _ => None,
             });
 
@@ -466,6 +469,7 @@ mod tests {
         assert_eq!(Flag::Fin.to_string(), "FIN");
         assert_eq!(Flag::StopSending.to_string(), "STOP_SENDING");
         assert_eq!(Flag::ResetStream.to_string(), "RESET_STREAM");
+        assert_eq!(Flag::FinAck.to_string(), "FIN_ACK");
     }
 
     #[test]
@@ -474,6 +478,7 @@ mod tests {
         assert_eq!(webrtc_proto::message::Flag::Fin as i32, 0);
         assert_eq!(webrtc_proto::message::Flag::StopSending as i32, 1);
         assert_eq!(webrtc_proto::message::Flag::ResetStream as i32, 2);
+        assert_eq!(webrtc_proto::message::Flag::FinAck as i32, 3);
     }
 
     #[test]

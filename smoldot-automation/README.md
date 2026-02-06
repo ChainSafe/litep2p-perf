@@ -128,20 +128,23 @@ Example output:
 ╞════════╪═════════════════════════╪══════════╪══════════╪══════════════╡
 │ 16     │ 2026-02-06 14:14:02.210 │ Dialer   │ 2        │ FIN          │
 ├╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ 18     │ 2026-02-06 14:14:02.315 │ Listener │ 2        │ FIN_ACK      │
+├╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌┤
 │ 28     │ 2026-02-06 14:14:03.450 │ Listener │ 3        │ STOP_SENDING │
 ├╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌┤
 │ 42     │ 2026-02-06 14:14:05.120 │ Dialer   │ 2        │ RESET_STREAM │
 └────────┴─────────────────────────┴──────────┴──────────┴──────────────┘
 
-Summary: 3 messages with flags found in 120 packets
+Summary: 4 messages with flags found in 120 packets
 ```
 
 ### WebRTC Message Flags
 
-The tool detects three types of stream control flags defined in the WebRTC protocol:
+The tool detects four types of stream control flags defined in the WebRTC protocol:
 
 - **FIN**: The sender will no longer send messages on the stream
 - **STOP_SENDING**: The sender will no longer read messages on the stream (incoming data is discarded)
 - **RESET_STREAM**: The sender abruptly terminates the stream (receiver may discard received data)
+- **FIN_ACK**: Acknowledges receipt of a FIN message, confirming the remote received all sent messages
 
 These flags are useful for debugging stream lifecycle issues and understanding connection teardown behavior.
