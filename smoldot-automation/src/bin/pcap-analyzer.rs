@@ -1,0 +1,492 @@
+use anyhow::{Context, Result};
+use chrono::{DateTime, Utc};
+use clap::Parser;
+use comfy_table::{presets::UTF8_FULL, Table};
+use pcap_file::pcap::PcapReader;
+use pcap_file::pcapng::{Block, PcapNgReader};
+use pcap_file::PcapError;
+use std::fs::File;
+use std::io::Read;
+use std::path::PathBuf;
+
+// Include prost-generated code from webrtc.proto
+mod webrtc_proto {
+    include!(concat!(env!("OUT_DIR"), "/webrtc.rs"));
+}
+
+#[derive(Parser)]
+#[command(name = "pcap-analyzer")]
+#[command(about = "Analyze WebRTC messages in SCTP pcap files")]
+struct Args {
+    /// Path to pcap/pcapng file
+    pcap_file: PathBuf,
+
+    /// IP address of the dialer (optional)
+    #[arg(long)]
+    dialer_ip: Option<String>,
+
+    /// Show all messages, not just those with flags
+    #[arg(long)]
+    all_messages: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Sender {
+    Dialer,
+    Listener,
+    Unknown,
+}
+
+impl std::fmt::Display for Sender {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Sender::Dialer => write!(f, "Dialer"),
+            Sender::Listener => write!(f, "Listener"),
+            Sender::Unknown => write!(f, "Unknown"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Flag {
+    Fin,
+    StopSending,
+    ResetStream,
+}
+
+impl std::fmt::Display for Flag {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Flag::Fin => write!(f, "FIN"),
+            Flag::StopSending => write!(f, "STOP_SENDING"),
+            Flag::ResetStream => write!(f, "RESET_STREAM"),
+        }
+    }
+}
+
+#[derive(Debug)]
+struct Message {
+    packet_number: u64,
+    timestamp: DateTime<Utc>,
+    sender: Sender,
+    stream_id: u16,
+    flag: Option<Flag>,
+}
+
+fn main() -> Result<()> {
+    let args = Args::parse();
+
+    // Determine file format and read packets
+    let (messages, total_packets) = if is_pcapng(&args.pcap_file)? {
+        read_pcapng(&args.pcap_file, &args)?
+    } else {
+        read_pcap(&args.pcap_file, &args)?
+    };
+
+    // Filter messages if needed
+    let filtered_messages: Vec<_> = if args.all_messages {
+        messages
+    } else {
+        messages.into_iter().filter(|m| m.flag.is_some()).collect()
+    };
+
+    // Display results
+    display_results(&filtered_messages, args.all_messages, total_packets);
+
+    Ok(())
+}
+
+fn is_pcapng(path: &PathBuf) -> Result<bool> {
+    let mut file = File::open(path)?;
+    let mut magic = [0u8; 4];
+    file.read_exact(&mut magic)?;
+
+    // pcapng magic: 0x0A0D0D0A
+    // pcap magic: 0xA1B2C3D4 or 0xD4C3B2A1 (different endianness)
+    Ok(magic == [0x0A, 0x0D, 0x0D, 0x0A])
+}
+
+fn read_pcap(path: &PathBuf, args: &Args) -> Result<(Vec<Message>, u64)> {
+    let file = File::open(path).context("Failed to open pcap file")?;
+    let mut pcap_reader = PcapReader::new(file).context("Failed to create pcap reader")?;
+
+    let mut messages = Vec::new();
+    let mut packet_number = 0u64;
+
+    while let Some(packet) = pcap_reader.next_packet() {
+        match packet {
+            Ok(packet) => {
+                packet_number += 1;
+
+                // Convert timestamp to DateTime
+                let timestamp = DateTime::from_timestamp(
+                    packet.timestamp.as_secs() as i64,
+                    packet.timestamp.subsec_nanos(),
+                )
+                .unwrap_or_else(|| Utc::now());
+
+                // Parse SCTP and extract messages
+                if let Some(mut msg_list) = parse_sctp_packet(&packet.data, packet_number, timestamp, &args.dialer_ip) {
+                    messages.append(&mut msg_list);
+                }
+            }
+            Err(PcapError::IncompleteBuffer) => break,
+            Err(e) => {
+                eprintln!("Warning: Error reading packet {}: {}", packet_number + 1, e);
+                continue;
+            }
+        }
+    }
+
+    Ok((messages, packet_number))
+}
+
+fn read_pcapng(path: &PathBuf, _args: &Args) -> Result<(Vec<Message>, u64)> {
+    let file = File::open(path).context("Failed to open pcapng file")?;
+    let mut pcapng_reader = PcapNgReader::new(file).context("Failed to create pcapng reader")?;
+
+    let mut messages = Vec::new();
+    let mut packet_number = 0u64;
+
+    while let Some(block) = pcapng_reader.next_block() {
+        match block {
+            Ok(Block::EnhancedPacket(epb)) => {
+                packet_number += 1;
+
+                // Convert timestamp to DateTime
+                let timestamp = DateTime::from_timestamp(
+                    epb.timestamp.as_secs() as i64,
+                    epb.timestamp.subsec_nanos(),
+                )
+                .unwrap_or_else(|| Utc::now());
+
+                // Determine sender from packet direction
+                let direction = epb.options.iter().find_map(|opt| {
+                    if let pcap_file::pcapng::blocks::enhanced_packet::EnhancedPacketOption::Flags(flags) = opt {
+                        Some(*flags)
+                    } else {
+                        None
+                    }
+                });
+
+                let sender = match direction {
+                    Some(flags) if flags & 0x02 != 0 => Sender::Dialer,   // Outbound from browser
+                    Some(flags) if flags & 0x01 != 0 => Sender::Listener, // Inbound to browser
+                    _ => Sender::Unknown,
+                };
+
+                // Parse SCTP and extract messages
+                if let Some(mut msg_list) = parse_sctp_packet_with_sender(&epb.data, packet_number, timestamp, sender) {
+                    messages.append(&mut msg_list);
+                }
+            }
+            Ok(_) => continue, // Ignore other block types
+            Err(PcapError::IncompleteBuffer) => break,
+            Err(e) => {
+                eprintln!("Warning: Error reading block: {}", e);
+                continue;
+            }
+        }
+    }
+
+    Ok((messages, packet_number))
+}
+
+fn parse_sctp_packet(data: &[u8], packet_number: u64, timestamp: DateTime<Utc>, _dialer_ip: &Option<String>) -> Option<Vec<Message>> {
+    // For pcap files without direction info, use Unknown sender
+    // TODO: Could parse IP headers to match against dialer_ip if provided
+    let sender = Sender::Unknown;
+    parse_sctp_packet_with_sender(data, packet_number, timestamp, sender)
+}
+
+fn parse_sctp_packet_with_sender(
+    data: &[u8],
+    packet_number: u64,
+    timestamp: DateTime<Utc>,
+    sender: Sender,
+) -> Option<Vec<Message>> {
+    // Parse Ethernet header (14 bytes)
+    if data.len() < 14 {
+        return None;
+    }
+
+    let ethertype = u16::from_be_bytes([data[12], data[13]]);
+    if ethertype != 0x0800 {
+        // Not IPv4
+        return None;
+    }
+
+    let mut offset = 14;
+
+    // Parse IPv4 header
+    if offset + 20 > data.len() {
+        return None;
+    }
+
+    let ip_header_len = ((data[offset] & 0x0F) * 4) as usize;
+    let protocol = data[offset + 9];
+
+    if protocol != 132 {
+        // Not SCTP
+        return None;
+    }
+
+    offset += ip_header_len;
+
+    // Parse SCTP common header (12 bytes)
+    if offset + 12 > data.len() {
+        return None;
+    }
+
+    let mut messages = Vec::new();
+    offset += 12; // Skip SCTP common header
+
+    // Parse SCTP chunks
+    while offset + 4 <= data.len() {
+        let chunk_type = data[offset];
+        let _chunk_flags = data[offset + 1];
+        let chunk_length = u16::from_be_bytes([data[offset + 2], data[offset + 3]]) as usize;
+
+        if chunk_length < 4 || offset + chunk_length > data.len() {
+            break;
+        }
+
+        // Process DATA chunks (type = 0)
+        if chunk_type == 0 && chunk_length >= 16 {
+            // DATA chunk structure:
+            // 0-3: type, flags, length
+            // 4-7: TSN
+            // 8-9: Stream Identifier
+            // 10-11: Stream Sequence Number
+            // 12-15: PPID
+            // 16+: User Data
+
+            let stream_id = u16::from_be_bytes([data[offset + 8], data[offset + 9]]);
+            let ppid = u32::from_be_bytes([
+                data[offset + 12],
+                data[offset + 13],
+                data[offset + 14],
+                data[offset + 15],
+            ]);
+
+            // Only process WebRTC Binary (PPID = 53)
+            if ppid == 53 {
+                let user_data = &data[offset + 16..offset + chunk_length];
+
+                // Decode WebRTC messages from user data
+                if let Some(mut webrtc_messages) = decode_webrtc_messages(
+                    user_data,
+                    packet_number,
+                    timestamp,
+                    sender,
+                    stream_id,
+                ) {
+                    messages.append(&mut webrtc_messages);
+                }
+            }
+        }
+
+        // Move to next chunk (chunks are padded to 4-byte boundary)
+        offset += (chunk_length + 3) & !3;
+    }
+
+    if messages.is_empty() {
+        None
+    } else {
+        Some(messages)
+    }
+}
+
+fn decode_webrtc_messages(
+    data: &[u8],
+    packet_number: u64,
+    timestamp: DateTime<Utc>,
+    sender: Sender,
+    stream_id: u16,
+) -> Option<Vec<Message>> {
+    let mut messages = Vec::new();
+    let mut offset = 0;
+
+    // WebRTC data channel messages are length-prefixed with varints
+    while offset < data.len() {
+        // Decode varint length
+        let (length, varint_len) = match decode_varint(&data[offset..]) {
+            Some(v) => v,
+            None => break,
+        };
+
+        offset += varint_len;
+
+        if offset + length > data.len() {
+            break;
+        }
+
+        // Decode protobuf message
+        let msg_data = &data[offset..offset + length];
+        if let Ok(webrtc_msg) = prost::Message::decode(msg_data) {
+            let webrtc_msg: webrtc_proto::Message = webrtc_msg;
+
+            let flag = webrtc_msg.flag.and_then(|f| match f {
+                0 => Some(Flag::Fin),
+                1 => Some(Flag::StopSending),
+                2 => Some(Flag::ResetStream),
+                _ => None,
+            });
+
+            messages.push(Message {
+                packet_number,
+                timestamp,
+                sender,
+                stream_id,
+                flag,
+            });
+        }
+
+        offset += length;
+    }
+
+    if messages.is_empty() {
+        None
+    } else {
+        Some(messages)
+    }
+}
+
+fn decode_varint(data: &[u8]) -> Option<(usize, usize)> {
+    let mut result = 0usize;
+    let mut shift = 0;
+
+    for (i, &byte) in data.iter().enumerate() {
+        if i >= 10 {
+            // Varints should not exceed 10 bytes
+            return None;
+        }
+
+        result |= ((byte & 0x7F) as usize) << shift;
+
+        if byte & 0x80 == 0 {
+            // Last byte
+            return Some((result, i + 1));
+        }
+
+        shift += 7;
+    }
+
+    None
+}
+
+fn display_results(messages: &[Message], show_all: bool, total_packets: u64) {
+    if messages.is_empty() {
+        if show_all {
+            println!("No messages found in {} packets", total_packets);
+        } else {
+            println!("No messages with flags found in {} packets", total_packets);
+        }
+        return;
+    }
+
+    let mut table = Table::new();
+    table.load_preset(UTF8_FULL);
+    table.set_header(vec!["Packet", "Timestamp", "Sender", "StreamID", "Flag"]);
+
+    for msg in messages {
+        let flag_str = msg.flag
+            .map(|f| f.to_string())
+            .unwrap_or_else(|| "-".to_string());
+
+        table.add_row(vec![
+            msg.packet_number.to_string(),
+            msg.timestamp.format("%Y-%m-%d %H:%M:%S%.3f").to_string(),
+            msg.sender.to_string(),
+            msg.stream_id.to_string(),
+            flag_str,
+        ]);
+    }
+
+    println!("{}", table);
+
+    let flag_count = messages.iter().filter(|m| m.flag.is_some()).count();
+    if show_all {
+        println!(
+            "\nSummary: {} total messages ({} with flags) in {} packets",
+            messages.len(),
+            flag_count,
+            total_packets
+        );
+    } else {
+        println!("\nSummary: {} messages with flags found in {} packets", flag_count, total_packets);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_decode_varint_single_byte() {
+        let data = [0x00];
+        assert_eq!(decode_varint(&data), Some((0, 1)));
+
+        let data = [0x7F];
+        assert_eq!(decode_varint(&data), Some((127, 1)));
+    }
+
+    #[test]
+    fn test_decode_varint_multi_byte() {
+        // 300 = 0b100101100 = 0xAC 0x02
+        let data = [0xAC, 0x02];
+        assert_eq!(decode_varint(&data), Some((300, 2)));
+
+        // 16384 = 0x80 0x80 0x01
+        let data = [0x80, 0x80, 0x01];
+        assert_eq!(decode_varint(&data), Some((16384, 3)));
+    }
+
+    #[test]
+    fn test_decode_varint_incomplete() {
+        let data = [0x80]; // Incomplete varint
+        assert_eq!(decode_varint(&data), None);
+    }
+
+    #[test]
+    fn test_decode_varint_too_long() {
+        let data = [0x80; 11]; // 11 bytes - too long
+        assert_eq!(decode_varint(&data), None);
+    }
+
+    #[test]
+    fn test_sender_display() {
+        assert_eq!(Sender::Dialer.to_string(), "Dialer");
+        assert_eq!(Sender::Listener.to_string(), "Listener");
+        assert_eq!(Sender::Unknown.to_string(), "Unknown");
+    }
+
+    #[test]
+    fn test_flag_display() {
+        assert_eq!(Flag::Fin.to_string(), "FIN");
+        assert_eq!(Flag::StopSending.to_string(), "STOP_SENDING");
+        assert_eq!(Flag::ResetStream.to_string(), "RESET_STREAM");
+    }
+
+    #[test]
+    fn test_flag_conversion() {
+        // Test flag enum values match proto definition
+        assert_eq!(webrtc_proto::message::Flag::Fin as i32, 0);
+        assert_eq!(webrtc_proto::message::Flag::StopSending as i32, 1);
+        assert_eq!(webrtc_proto::message::Flag::ResetStream as i32, 2);
+    }
+
+    #[test]
+    fn test_parse_sctp_header_too_short() {
+        let data = [0u8; 8]; // Less than 12 bytes
+        let result = parse_sctp_packet_with_sender(&data, 1, Utc::now(), Sender::Unknown);
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_parse_sctp_header_minimum() {
+        let data = [0u8; 12]; // Exactly 12 bytes, no chunks
+        let result = parse_sctp_packet_with_sender(&data, 1, Utc::now(), Sender::Unknown);
+        assert!(result.is_none());
+    }
+}
