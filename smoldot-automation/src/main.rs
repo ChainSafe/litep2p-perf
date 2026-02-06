@@ -2,7 +2,7 @@ use std::env;
 use std::process::Command;
 use std::sync::mpsc;
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -27,34 +27,46 @@ fn main() -> Result<()> {
     tracing::debug!("Server is running. Press Ctrl+C to stop.");
 
     thread::sleep(Duration::from_secs(2));
-    run_browser(
-        host,
-        &params.peer,
-        params.upload_bytes,
-        params.download_bytes,
-    )?;
+
+    let url = format!(
+        "http://{}/index.html?peer={}&upload_bytes={}&download_bytes={}&autorun=true",
+        host, params.peer, params.upload_bytes, params.download_bytes,
+    );
+    let timestamp = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
+    let pcap_filename = format!("out-{}.pcapng", timestamp);
+
+    if params.capture {
+        let cmd = browser_command_line(&url, &pcap_filename)?;
+        println!("Run this command: {}", cmd);
+    } else {
+        run_browser(&url)?;
+    }
 
     let durations = done_rx.recv()?;
 
-    println!(
-        "Uploaded {} bytes in {:.4}s bandwidth {}",
-        utils::format_bytes(params.upload_bytes as usize),
-        durations.upload_seconds,
-        utils::format_bandwidth(
-            Duration::from_secs_f64(durations.upload_seconds),
-            params.upload_bytes as usize,
-        )
-    );
+    if params.capture {
+        println!("You can now open {} in Wireshark", pcap_filename);
+    } else {
+        println!(
+            "Uploaded {} bytes in {:.4}s bandwidth {}",
+            utils::format_bytes(params.upload_bytes as usize),
+            durations.upload_seconds,
+            utils::format_bandwidth(
+                Duration::from_secs_f64(durations.upload_seconds),
+                params.upload_bytes as usize,
+            )
+        );
 
-    println!(
-        "Downloaded {} bytes in {:.4}s bandwidth {}",
-        utils::format_bytes(params.download_bytes as usize),
-        durations.download_seconds,
-        utils::format_bandwidth(
-            Duration::from_secs_f64(durations.download_seconds),
-            params.download_bytes as usize,
-        )
-    );
+        println!(
+            "Downloaded {} bytes in {:.4}s bandwidth {}",
+            utils::format_bytes(params.download_bytes as usize),
+            durations.download_seconds,
+            utils::format_bandwidth(
+                Duration::from_secs_f64(durations.download_seconds),
+                params.download_bytes as usize,
+            )
+        );
+    }
 
     Ok(())
 }
@@ -85,12 +97,7 @@ fn run_server(host: &str, tx: mpsc::Sender<Durations>) {
     });
 }
 
-fn run_browser(host: &str, peer: &str, upload_bytes: u64, download_bytes: u64) -> Result<()> {
-    let url = format!(
-        "http://{}/index.html?peer={}&upload_bytes={}&download_bytes={}&autorun=true",
-        host, peer, upload_bytes, download_bytes,
-    );
-
+fn run_browser(url: &str) -> Result<()> {
     tracing::debug!("Opening browser at {}", url);
 
     let mut options = headless_chrome::LaunchOptions::default();
@@ -99,10 +106,21 @@ fn run_browser(host: &str, peer: &str, upload_bytes: u64, download_bytes: u64) -
     let browser = headless_chrome::Browser::new(options)?;
     let tab = browser.new_tab()?;
 
-    tab.navigate_to(&url)?;
+    tab.navigate_to(url)?;
     tab.wait_until_navigated()?;
     tab.wait_for_element("#perf-finished")?;
     Ok(())
+}
+
+fn browser_command_line(url: &str, pcap_filename: &str) -> Result<String> {
+    Ok(format!(
+        "/path/to/chrome --guest \\\n    \
+             --auto-open-devtools-for-tabs \\\n    \
+             --enable-logging=stderr --log-level=0 --v=0 \\\n    \
+             --vmodule='*/webrtc/*=1' \"{}\" \\\n     \
+             2>&1 | grep -F SCTP_PACKET | text2pcap -D -t %H:%M:%S.%f -i 132 - {}",
+        url, pcap_filename,
+    ))
 }
 
 fn build_wasm() -> Result<()> {
@@ -161,27 +179,42 @@ struct Params {
     peer: String,
     upload_bytes: u64,
     download_bytes: u64,
+    capture: bool,
 }
 
 fn parse_args(args: &[String]) -> Result<Params> {
-    if args.len() < 4 {
-        eprintln!("Usage: {} <peer> <upload_bytes> <download_bytes>", args[0]);
+    let mut capture = false;
+    let mut positional = Vec::new();
+
+    for arg in &args[1..] {
+        if arg == "--capture" {
+            capture = true;
+        } else {
+            positional.push(arg.as_str());
+        }
+    }
+
+    if positional.len() < 3 {
+        eprintln!(
+            "Usage: {} [--capture] <peer> <upload_bytes> <download_bytes>",
+            args[0]
+        );
         return Err("Missing required arguments".into());
     }
 
-    let peer = &args[1];
+    let peer = positional[0];
 
-    let upload_bytes = args[2].parse::<u64>().map_err(|_| {
+    let upload_bytes = positional[1].parse::<u64>().map_err(|_| {
         format!(
             "Error: 'upload_bytes' must be a valid positive integer (found: '{}')",
-            args[2]
+            positional[1]
         )
     })?;
 
-    let download_bytes = args[3].parse::<u64>().map_err(|_| {
+    let download_bytes = positional[2].parse::<u64>().map_err(|_| {
         format!(
             "Error: 'download_bytes' must be a valid positive integer (found: '{}')",
-            args[3]
+            positional[2]
         )
     })?;
 
@@ -189,6 +222,7 @@ fn parse_args(args: &[String]) -> Result<Params> {
         peer: peer.to_string(),
         upload_bytes,
         download_bytes,
+        capture,
     })
 }
 
