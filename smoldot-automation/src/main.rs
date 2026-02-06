@@ -36,8 +36,9 @@ fn main() -> Result<()> {
     let pcap_filename = format!("out-{}.pcapng", timestamp);
 
     if params.capture {
-        let cmd = browser_command_line(&url, &pcap_filename)?;
-        println!("Run this command: {}", cmd);
+        let cmd = browser_command_line(&pcap_filename)?;
+        println!("\n\nRun this command: {cmd}");
+        println!("\n\nOpen this URL: {url}");
     } else {
         run_browser(&url)?;
     }
@@ -112,14 +113,14 @@ fn run_browser(url: &str) -> Result<()> {
     Ok(())
 }
 
-fn browser_command_line(url: &str, pcap_filename: &str) -> Result<String> {
+fn browser_command_line(pcap_filename: &str) -> Result<String> {
     Ok(format!(
         "/path/to/chrome --guest \\\n    \
              --auto-open-devtools-for-tabs \\\n    \
              --enable-logging=stderr --log-level=0 --v=0 \\\n    \
-             --vmodule='*/webrtc/*=1' \"{}\" \\\n     \
+             --vmodule='*/webrtc/*=1' \\\n     \
              2>&1 | grep -F SCTP_PACKET | text2pcap -D -t %H:%M:%S.%f -i 132 - {}",
-        url, pcap_filename,
+        pcap_filename,
     ))
 }
 

@@ -61,15 +61,17 @@ smoldot-automation --capture /ip4/127.0.0.1/tcp/30333/p2p/12D3KooW... 1000000 10
 /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --guest \
     --auto-open-devtools-for-tabs \
     --enable-logging=stderr --log-level=0 --v=0 \
-    --vmodule='*/webrtc/*=1' "http://127.0.0.1:8082/index.html?peer=..." \
+    --vmodule='*/webrtc/*=1' \
      2>&1 | grep -F SCTP_PACKET | text2pcap -D -t %H:%M:%S.%f -i 132 - out-1738876543.pcapng
 ```
 
 3. Make sure Chrome is not running, then execute the command.
 
-4. Quit Chrome once the `litep2p-perf` run has finished.
+4. Navigate to the URL printed by `smoldot-automation`.
+
+5. Quit Chrome once the `litep2p-perf` run has finished.
  
-5. The resulting `.pcapng` file can be opened with Wireshark for analysis or processed with `pcap-analyzer` (see below).
+6. The resulting `.pcapng` file can be opened with Wireshark for analysis or processed with `pcap-analyzer` (see below).
 
 ## PCAP Analyzer
 
