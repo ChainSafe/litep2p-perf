@@ -207,6 +207,7 @@
     // This is added to the DOM so smoldot-automation can wait for it before shutting down the browser.
     const finishedDiv = document.createElement('div');
     finishedDiv.id = 'perf-finished';
+    finishedDiv.textContent = 'Done.';
     document.getElementById('output').appendChild(finishedDiv);
   }
 
