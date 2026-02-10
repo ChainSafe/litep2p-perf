@@ -73,6 +73,7 @@ struct Message {
     sender: Sender,
     stream_id: u16,
     flag: Option<Flag>,
+    protocol: Option<String>,
 }
 
 fn main() -> Result<()> {
@@ -336,12 +337,18 @@ fn decode_webrtc_messages(
                 _ => None,
             });
 
+            // Extract multistream protocol if present
+            let protocol = webrtc_msg.message.as_ref().and_then(|msg_bytes| {
+                extract_multistream_protocol(msg_bytes)
+            });
+
             messages.push(Message {
                 packet_number,
                 timestamp,
                 sender,
                 stream_id,
                 flag,
+                protocol,
             });
         }
 
@@ -378,6 +385,43 @@ fn decode_varint(data: &[u8]) -> Option<(usize, usize)> {
     None
 }
 
+fn extract_multistream_protocol(data: &[u8]) -> Option<String> {
+    let mut protocols = Vec::new();
+    let mut offset = 0;
+
+    // Loop through all length-prefixed strings in the payload
+    while offset < data.len() {
+        // Decode the length-prefixed string
+        let (length, varint_len) = match decode_varint(&data[offset..]) {
+            Some(v) => v,
+            None => break,
+        };
+
+        if offset + varint_len + length > data.len() {
+            break;
+        }
+
+        let string_data = &data[offset + varint_len..offset + varint_len + length];
+
+        // Try to decode as UTF-8
+        if let Ok(s) = std::str::from_utf8(string_data) {
+            // Check if it starts with "/" (protocol string) or is "na" (not supported response)
+            if s.starts_with('/') || s.trim_end() == "na" {
+                protocols.push(s);
+            }
+        }
+
+        offset += varint_len + length;
+    }
+
+    if protocols.is_empty() {
+        None
+    } else {
+        // Join all protocols with spaces
+        Some(protocols.join(" "))
+    }
+}
+
 fn display_results(messages: &[Message], show_all: bool, total_packets: u64) {
     if messages.is_empty() {
         if show_all {
@@ -390,12 +434,17 @@ fn display_results(messages: &[Message], show_all: bool, total_packets: u64) {
 
     let mut table = Table::new();
     table.load_preset(UTF8_FULL);
-    table.set_header(vec!["Packet", "Timestamp", "Sender", "StreamID", "Flag"]);
+    table.set_header(vec!["Packet", "Timestamp", "Sender", "StreamID", "Flag", "Protocol"]);
 
     for msg in messages {
         let flag_str = msg.flag
             .map(|f| f.to_string())
             .unwrap_or_else(|| "-".to_string());
+
+        let protocol_str = msg.protocol
+            .as_ref()
+            .map(|p| p.as_str())
+            .unwrap_or("-");
 
         table.add_row(vec![
             msg.packet_number.to_string(),
@@ -403,6 +452,7 @@ fn display_results(messages: &[Message], show_all: bool, total_packets: u64) {
             msg.sender.to_string(),
             msg.stream_id.to_string(),
             flag_str,
+            protocol_str.to_string(),
         ]);
     }
 
@@ -493,5 +543,122 @@ mod tests {
         let data = [0u8; 12]; // Exactly 12 bytes, no chunks
         let result = parse_sctp_packet_with_sender(&data, 1, Utc::now(), Sender::Unknown);
         assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_extract_multistream_protocol() {
+        // Test with "/multistream/1.0.0" (length 19 = 0x13)
+        let protocol = b"/multistream/1.0.0";
+        let mut data = vec![protocol.len() as u8]; // varint length
+        data.extend_from_slice(protocol);
+
+        let result = extract_multistream_protocol(&data);
+        assert_eq!(result, Some("/multistream/1.0.0".to_string()));
+    }
+
+    #[test]
+    fn test_extract_multistream_protocol_yamux() {
+        // Test with "/yamux/1.0.0" (length 12 = 0x0C)
+        let protocol = b"/yamux/1.0.0";
+        let mut data = vec![protocol.len() as u8]; // varint length
+        data.extend_from_slice(protocol);
+
+        let result = extract_multistream_protocol(&data);
+        assert_eq!(result, Some("/yamux/1.0.0".to_string()));
+    }
+
+    #[test]
+    fn test_extract_multistream_protocol_no_slash() {
+        // Test with non-protocol data
+        let data = b"\x05hello";
+        let result = extract_multistream_protocol(data);
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_extract_multistream_protocol_invalid_utf8() {
+        // Test with invalid UTF-8
+        let mut data = vec![4u8]; // length 4
+        data.extend_from_slice(&[0xFF, 0xFF, 0xFF, 0xFF]); // Invalid UTF-8
+
+        let result = extract_multistream_protocol(&data);
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_extract_multistream_protocol_incomplete() {
+        // Test with incomplete data (length says 10 but only 5 bytes)
+        let data = b"\x0Ahello";
+        let result = extract_multistream_protocol(data);
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_extract_multistream_protocol_multiple() {
+        // Test with multiple protocols: "/multistream/1.0.0\n" and "/ipfs/ping/1.0.0\n"
+        let protocol1 = b"/multistream/1.0.0\n";
+        let protocol2 = b"/ipfs/ping/1.0.0\n";
+
+        let mut data = vec![protocol1.len() as u8];
+        data.extend_from_slice(protocol1);
+        data.push(protocol2.len() as u8);
+        data.extend_from_slice(protocol2);
+
+        let result = extract_multistream_protocol(&data);
+        assert_eq!(result, Some("/multistream/1.0.0\n /ipfs/ping/1.0.0\n".to_string()));
+    }
+
+    #[test]
+    fn test_extract_multistream_protocol_mixed() {
+        // Test with protocol followed by non-protocol data
+        let protocol = b"/multistream/1.0.0\n";
+        let non_protocol = b"hello";
+
+        let mut data = vec![protocol.len() as u8];
+        data.extend_from_slice(protocol);
+        data.push(non_protocol.len() as u8);
+        data.extend_from_slice(non_protocol);
+
+        let result = extract_multistream_protocol(&data);
+        // Should only extract the protocol, not the non-protocol data
+        assert_eq!(result, Some("/multistream/1.0.0\n".to_string()));
+    }
+
+    #[test]
+    fn test_extract_multistream_protocol_na() {
+        // Test with "na" response (protocol not supported)
+        let na = b"na\n";
+        let mut data = vec![na.len() as u8];
+        data.extend_from_slice(na);
+
+        let result = extract_multistream_protocol(&data);
+        assert_eq!(result, Some("na\n".to_string()));
+    }
+
+    #[test]
+    fn test_extract_multistream_protocol_request_and_na() {
+        // Test with protocol request followed by "na" response
+        // Simulates: peer A requests /ipfs/ping/1.0.0, peer B responds na
+        let protocol1 = b"/multistream/1.0.0\n";
+        let protocol2 = b"/ipfs/ping/1.0.0\n";
+        let na = b"na\n";
+
+        // Request (A -> B)
+        let mut data = vec![protocol1.len() as u8];
+        data.extend_from_slice(protocol1);
+        data.push(protocol2.len() as u8);
+        data.extend_from_slice(protocol2);
+
+        let result = extract_multistream_protocol(&data);
+        assert_eq!(result, Some("/multistream/1.0.0\n /ipfs/ping/1.0.0\n".to_string()));
+
+        // Response (B -> A)
+        let mut data = vec![protocol1.len() as u8];
+        data.extend_from_slice(protocol1);
+        data.push(na.len() as u8);
+        data.extend_from_slice(na);
+
+        let result = extract_multistream_protocol(&data);
+        assert_eq!(result, Some("/multistream/1.0.0\n na\n".to_string()));
     }
 }
