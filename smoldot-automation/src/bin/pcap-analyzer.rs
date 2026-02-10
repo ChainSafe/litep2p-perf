@@ -6,7 +6,7 @@ use pcap_file::pcap::PcapReader;
 use pcap_file::pcapng::{Block, PcapNgReader};
 use pcap_file::PcapError;
 use std::fs::File;
-use std::io::Read;
+use std::io::{Read, Write};
 use std::path::PathBuf;
 
 // Include prost-generated code from webrtc.proto
@@ -28,6 +28,10 @@ struct Args {
     /// Show all messages, not just those with flags
     #[arg(long)]
     all_messages: bool,
+
+    /// Output results to CSV file instead of table
+    #[arg(long)]
+    csv: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -94,7 +98,7 @@ fn main() -> Result<()> {
     };
 
     // Display results
-    display_results(&filtered_messages, args.all_messages, total_packets);
+    display_results(&filtered_messages, &args, total_packets)?;
 
     Ok(())
 }
@@ -422,16 +426,26 @@ fn extract_multistream_protocol(data: &[u8]) -> Option<String> {
     }
 }
 
-fn display_results(messages: &[Message], show_all: bool, total_packets: u64) {
+fn display_results(messages: &[Message], args: &Args, total_packets: u64) -> Result<()> {
     if messages.is_empty() {
-        if show_all {
+        if args.all_messages {
             println!("No messages found in {} packets", total_packets);
         } else {
             println!("No messages with flags found in {} packets", total_packets);
         }
-        return;
+        return Ok(());
     }
 
+    if args.csv {
+        write_csv(messages, &args.pcap_file)?;
+    } else {
+        display_table(messages, args.all_messages, total_packets);
+    }
+
+    Ok(())
+}
+
+fn display_table(messages: &[Message], show_all: bool, total_packets: u64) {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL);
     table.set_header(vec!["Packet", "Timestamp", "Sender", "StreamID", "Flag", "Protocol"]);
@@ -468,6 +482,52 @@ fn display_results(messages: &[Message], show_all: bool, total_packets: u64) {
         );
     } else {
         println!("\nSummary: {} messages with flags found in {} packets", flag_count, total_packets);
+    }
+}
+
+fn write_csv(messages: &[Message], input_path: &PathBuf) -> Result<()> {
+    // Generate output filename from input filename
+    let output_path = input_path.with_extension("csv");
+
+    let mut file = File::create(&output_path)
+        .context(format!("Failed to create CSV file: {}", output_path.display()))?;
+
+    // Write CSV header
+    writeln!(file, "Packet,Timestamp,Sender,StreamID,Flag,Protocol")?;
+
+    // Write each message as a CSV row
+    for msg in messages {
+        let flag_str = msg.flag
+            .map(|f| f.to_string())
+            .unwrap_or_else(|| String::new());
+
+        let protocol_str = msg.protocol
+            .as_ref()
+            .map(|p| escape_csv_field(p))
+            .unwrap_or_else(|| String::new());
+
+        writeln!(
+            file,
+            "{},{},{},{},{},{}",
+            msg.packet_number,
+            msg.timestamp.format("%Y-%m-%d %H:%M:%S%.3f"),
+            msg.sender,
+            msg.stream_id,
+            flag_str,
+            protocol_str
+        )?;
+    }
+
+    println!("CSV output written to: {}", output_path.display());
+    Ok(())
+}
+
+fn escape_csv_field(field: &str) -> String {
+    // If field contains comma, quote, or newline, wrap in quotes and escape quotes
+    if field.contains(',') || field.contains('"') || field.contains('\n') {
+        format!("\"{}\"", field.replace('"', "\"\""))
+    } else {
+        field.to_string()
     }
 }
 

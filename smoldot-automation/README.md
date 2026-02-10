@@ -96,6 +96,7 @@ pcap-analyzer [OPTIONS] <pcap_file>
 ### Options
 
 - `--all-messages`: Show all WebRTC messages, not just those with flags (default: only show messages with flags)
+- `--csv`: Output results to a CSV file instead of displaying a table (file is named after the input pcap file)
 - `--dialer-ip <IP>`: Specify the IP address of the dialer for sender identification (optional, automatically detected in pcapng files)
 
 ### Examples
@@ -112,6 +113,14 @@ cargo run --bin pcap-analyzer -- out-1738876543.pcapng
 cargo run --bin pcap-analyzer -- --all-messages out-1738876543.pcapng
 ```
 
+**Export results to CSV:**
+
+```bash
+cargo run --bin pcap-analyzer -- --csv out-1738876543.pcapng
+```
+
+This will create a file named `out-1738876543.csv` with the same data in CSV format, suitable for importing into spreadsheet applications or further processing.
+
 ### Output Format
 
 The tool displays results in a table with the following columns:
@@ -120,7 +129,10 @@ The tool displays results in a table with the following columns:
 - **Timestamp**: When the packet was captured (UTC)
 - **Sender**: Whether the message was sent by the Dialer (Chrome) or Listener (peer)
 - **StreamID**: SCTP stream identifier
-- **Flag**: WebRTC message flag type (FIN, STOP_SENDING, or RESET_STREAM)
+- **Flag**: WebRTC message flag type (FIN, STOP_SENDING, RESET_STREAM, or FIN_ACK)
+- **Protocol**: Multistream-select protocol strings extracted from message payloads (if present)
+
+#### Table Output (default)
 
 Example output:
 
@@ -139,6 +151,22 @@ Example output:
 
 Summary: 4 messages with flags found in 120 packets
 ```
+
+#### CSV Output (with `--csv` flag)
+
+When using the `--csv` flag, the output is written to a CSV file named after the input file. For example, analyzing `out-1738876543.pcapng` creates `out-1738876543.csv`.
+
+Example CSV content:
+
+```csv
+Packet,Timestamp,Sender,StreamID,Flag,Protocol
+16,2026-02-06 14:14:02.210,Dialer,2,FIN,
+18,2026-02-06 14:14:02.315,Listener,2,FIN_ACK,
+28,2026-02-06 14:14:03.450,Listener,3,STOP_SENDING,
+42,2026-02-06 14:14:05.120,Dialer,2,RESET_STREAM,
+```
+
+The CSV format properly escapes fields containing commas, quotes, or newlines, making it suitable for import into spreadsheet applications like Excel, Google Sheets, or for further processing with data analysis tools.
 
 ### WebRTC Message Flags
 
