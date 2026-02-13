@@ -32,6 +32,22 @@ struct Args {
     /// Output results to CSV file instead of table
     #[arg(long)]
     csv: bool,
+
+    /// Show payload information (length and first bytes)
+    #[arg(long)]
+    show_payload: bool,
+
+    /// Filter to only show messages with payloads larger than this size
+    #[arg(long)]
+    min_payload_size: Option<usize>,
+
+    /// Dump full payload bytes as hex for messages matching criteria
+    #[arg(long)]
+    dump_payload: bool,
+
+    /// Analyze payload type (handshake vs block announce)
+    #[arg(long)]
+    analyze_payload: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -78,6 +94,8 @@ struct Message {
     stream_id: u16,
     flag: Option<Flag>,
     protocol: Option<String>,
+    payload: Option<Vec<u8>>,
+    payload_len: usize,
 }
 
 fn main() -> Result<()> {
@@ -91,11 +109,19 @@ fn main() -> Result<()> {
     };
 
     // Filter messages if needed
-    let filtered_messages: Vec<_> = if args.all_messages {
+    let mut filtered_messages: Vec<_> = if args.all_messages {
         messages
     } else {
         messages.into_iter().filter(|m| m.flag.is_some()).collect()
     };
+
+    // Apply payload size filter if specified
+    if let Some(min_size) = args.min_payload_size {
+        filtered_messages = filtered_messages
+            .into_iter()
+            .filter(|m| m.payload_len >= min_size)
+            .collect();
+    }
 
     // Display results
     display_results(&filtered_messages, &args, total_packets)?;
@@ -346,6 +372,12 @@ fn decode_webrtc_messages(
                 extract_multistream_protocol(msg_bytes)
             });
 
+            // Extract payload bytes and length
+            let (payload, payload_len) = match webrtc_msg.message {
+                Some(ref bytes) => (Some(bytes.clone()), bytes.len()),
+                None => (None, 0),
+            };
+
             messages.push(Message {
                 packet_number,
                 timestamp,
@@ -353,6 +385,8 @@ fn decode_webrtc_messages(
                 stream_id,
                 flag,
                 protocol,
+                payload,
+                payload_len,
             });
         }
 
@@ -387,6 +421,34 @@ fn decode_varint(data: &[u8]) -> Option<(usize, usize)> {
     }
 
     None
+}
+
+fn analyze_payload(payload: &[u8]) -> String {
+    if payload.is_empty() {
+        return "Empty".to_string();
+    }
+
+    // Check if it looks like a block announce (typically 200-400 bytes, starts with 32-byte parent hash)
+    if payload.len() >= 200 && payload.len() <= 500 {
+        // Block announces should start with a 32-byte parent hash
+        // After that, byte 32 should be a SCALE compact (usually small value for block number)
+        if payload.len() >= 33 {
+            let byte_32 = payload[32];
+            let mode = byte_32 & 0b11;
+
+            // Mode 0 (single byte) is most common for block numbers in dev chains
+            if mode == 0 {
+                return format!("Likely BlockAnnounce ({}B)", payload.len());
+            }
+        }
+    }
+
+    // Check if it looks like a handshake (shorter, often starts with specific patterns)
+    if payload.len() < 200 {
+        return format!("Likely Handshake ({}B)", payload.len());
+    }
+
+    format!("Unknown ({}B)", payload.len())
 }
 
 fn extract_multistream_protocol(data: &[u8]) -> Option<String> {
@@ -437,18 +499,30 @@ fn display_results(messages: &[Message], args: &Args, total_packets: u64) -> Res
     }
 
     if args.csv {
-        write_csv(messages, &args.pcap_file)?;
+        write_csv(messages, &args.pcap_file, args)?;
     } else {
-        display_table(messages, args.all_messages, total_packets);
+        display_table(messages, args.all_messages, total_packets, args);
     }
 
     Ok(())
 }
 
-fn display_table(messages: &[Message], show_all: bool, total_packets: u64) {
+fn display_table(messages: &[Message], show_all: bool, total_packets: u64, args: &Args) {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL);
-    table.set_header(vec!["Packet", "Timestamp", "Sender", "StreamID", "Flag", "Protocol"]);
+
+    // Add payload columns if requested
+    let mut headers = vec!["Packet", "Timestamp", "Sender", "StreamID", "Flag", "Protocol"];
+    if args.show_payload || args.dump_payload || args.analyze_payload {
+        headers.push("PayloadLen");
+        if args.analyze_payload {
+            headers.push("PayloadType");
+        }
+        if args.dump_payload {
+            headers.push("First128Bytes");
+        }
+    }
+    table.set_header(headers);
 
     for msg in messages {
         let flag_str = msg.flag
@@ -460,14 +534,44 @@ fn display_table(messages: &[Message], show_all: bool, total_packets: u64) {
             .map(|p| p.as_str())
             .unwrap_or("-");
 
-        table.add_row(vec![
+        let mut row = vec![
             msg.packet_number.to_string(),
             msg.timestamp.format("%Y-%m-%d %H:%M:%S%.3f").to_string(),
             msg.sender.to_string(),
             msg.stream_id.to_string(),
             flag_str,
             protocol_str.to_string(),
-        ]);
+        ];
+
+        if args.show_payload || args.dump_payload || args.analyze_payload {
+            row.push(msg.payload_len.to_string());
+
+            if args.analyze_payload {
+                let analysis = if let Some(ref payload) = msg.payload {
+                    analyze_payload(payload)
+                } else {
+                    "No payload".to_string()
+                };
+                row.push(analysis);
+            }
+
+            if args.dump_payload {
+                let hex_str = if let Some(ref payload) = msg.payload {
+                    let bytes_to_show = payload.len().min(128);
+                    format!("[{}]",
+                        payload[..bytes_to_show]
+                            .iter()
+                            .map(|b| format!("{}", b))
+                            .collect::<Vec<_>>()
+                            .join(", "))
+                } else {
+                    "-".to_string()
+                };
+                row.push(hex_str);
+            }
+        }
+
+        table.add_row(row);
     }
 
     println!("{}", table);
@@ -485,7 +589,7 @@ fn display_table(messages: &[Message], show_all: bool, total_packets: u64) {
     }
 }
 
-fn write_csv(messages: &[Message], input_path: &PathBuf) -> Result<()> {
+fn write_csv(messages: &[Message], input_path: &PathBuf, args: &Args) -> Result<()> {
     // Generate output filename from input filename
     let output_path = input_path.with_extension("csv");
 
@@ -493,7 +597,17 @@ fn write_csv(messages: &[Message], input_path: &PathBuf) -> Result<()> {
         .context(format!("Failed to create CSV file: {}", output_path.display()))?;
 
     // Write CSV header
-    writeln!(file, "Packet,Timestamp,Sender,StreamID,Flag,Protocol")?;
+    let mut header = "Packet,Timestamp,Sender,StreamID,Flag,Protocol".to_string();
+    if args.show_payload || args.dump_payload || args.analyze_payload {
+        header.push_str(",PayloadLen");
+        if args.analyze_payload {
+            header.push_str(",PayloadType");
+        }
+        if args.dump_payload {
+            header.push_str(",First128Bytes");
+        }
+    }
+    writeln!(file, "{}", header)?;
 
     // Write each message as a CSV row
     for msg in messages {
@@ -506,8 +620,7 @@ fn write_csv(messages: &[Message], input_path: &PathBuf) -> Result<()> {
             .map(|p| escape_csv_field(p))
             .unwrap_or_else(|| String::new());
 
-        writeln!(
-            file,
+        let mut row = format!(
             "{},{},{},{},{},{}",
             msg.packet_number,
             msg.timestamp.format("%Y-%m-%d %H:%M:%S%.3f"),
@@ -515,7 +628,37 @@ fn write_csv(messages: &[Message], input_path: &PathBuf) -> Result<()> {
             msg.stream_id,
             flag_str,
             protocol_str
-        )?;
+        );
+
+        if args.show_payload || args.dump_payload || args.analyze_payload {
+            row.push_str(&format!(",{}", msg.payload_len));
+
+            if args.analyze_payload {
+                let analysis = if let Some(ref payload) = msg.payload {
+                    escape_csv_field(&analyze_payload(payload))
+                } else {
+                    "No payload".to_string()
+                };
+                row.push_str(&format!(",{}", analysis));
+            }
+
+            if args.dump_payload {
+                let hex_str = if let Some(ref payload) = msg.payload {
+                    let bytes_to_show = payload.len().min(128);
+                    escape_csv_field(&format!("[{}]",
+                        payload[..bytes_to_show]
+                            .iter()
+                            .map(|b| format!("{}", b))
+                            .collect::<Vec<_>>()
+                            .join(", ")))
+                } else {
+                    String::new()
+                };
+                row.push_str(&format!(",{}", hex_str));
+            }
+        }
+
+        writeln!(file, "{}", row)?;
     }
 
     println!("CSV output written to: {}", output_path.display());
