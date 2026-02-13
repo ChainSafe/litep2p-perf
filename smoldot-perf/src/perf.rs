@@ -128,12 +128,6 @@ impl PerfStream {
                 );
                 read_write.write_out(Vec::from(self.download_bytes.to_be_bytes()));
 
-                // FIXME: Including this breaks receiving the download bytes.
-                // It should mean that this side won't send any more data, but the libp2p remote
-                // seems to interpret it as "substream closed".
-                // This should cause WebRtcFraming to include the FIN flag in the outgoing message.
-                // read_write.write_bytes_queueable = None;
-
                 Some(PerfStreamInner::BytesDownload(
                     self.download_bytes,
                     upload_duration,
@@ -170,6 +164,9 @@ impl PerfStream {
                         upload_duration,
                         download_duration,
                     ).into());
+
+                    // This should cause WebRtcFraming to include the FIN flag in the outgoing message.
+                    read_write.write_bytes_queueable = None;
 
                     Some(PerfStreamInner::Done(upload_duration, download_duration))
                 }

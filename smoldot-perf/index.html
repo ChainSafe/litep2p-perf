@@ -299,6 +299,18 @@
 
   globalThis.createDatachannel = createDatachannel;
 
+  export function closeDatachannel(channelId) {
+    const channel = channels[channelId];
+
+    if (!channel) {
+      return;
+    }
+
+    channel.close();
+  }
+
+  globalThis.closeDatachannel = closeDatachannel;
+
   export async function dialWebRtcDirect(address, certificate) {
     const pc = new RTCPeerConnection({certificates: [certificate], iceServers: []});
     globalThis.rtcPeerConnection = pc;

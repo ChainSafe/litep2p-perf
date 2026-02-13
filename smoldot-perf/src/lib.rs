@@ -34,6 +34,9 @@ extern "C" {
     #[wasm_bindgen(catch)]
     fn createDatachannel() -> Result<js_sys::Number, JsValue>;
 
+    #[wasm_bindgen(catch)]
+    fn closeDatachannel(channel_id: u64) -> Result<(), JsValue>;
+
     fn scheduleTick();
 
     fn now() -> js_sys::Number;
@@ -428,6 +431,7 @@ impl ClientInner {
         }
 
         let Some(stream) = self.perf_stream.take() else {
+            console::log_1(&"ClientInner::on_message(): perf_stream consumed itself".into());
             return;
         };
         match (stream.upload_duration, stream.download_duration) {
@@ -440,6 +444,9 @@ impl ClientInner {
                         &format!("ClientInner::on_message(): sendResults() failed: {:?}", e).into(),
                     );
                 }
+
+                console::log_1(&"ClientInner::on_message(): got durations, closing channel".into());
+                let _ = closeDatachannel(channel_id);
             }
             _ => {}
         }
