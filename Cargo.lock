@@ -2870,7 +2870,7 @@ checksum = "23fb14cb19457329c82206317a5663005a4d404783dc74f4252769b0d5f42856"
 [[package]]
 name = "litep2p"
 version = "0.12.3"
-source = "git+https://github.com/paritytech/litep2p?branch=master#ba3d7bd9678804bf7e5782363fe99b4a6ffe9d7b"
+source = "git+https://github.com/ChainSafe/litep2p?branch=tim%2Fimpl-backpressure#558ddacf6ed2bc2ab2b46d2134b2741764e8bb78"
 dependencies = [
  "async-trait",
  "bs58",
