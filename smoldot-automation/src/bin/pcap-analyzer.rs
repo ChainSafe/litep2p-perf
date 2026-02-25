@@ -86,6 +86,55 @@ impl std::fmt::Display for Flag {
     }
 }
 
+#[derive(Debug, Clone)]
+enum SctpEvent {
+    /// Outgoing SSN Reset Request (param type 13) - sender wants to reset these outgoing streams
+    OutgoingReset { stream_ids: Vec<u16> },
+    /// Incoming SSN Reset Request (param type 14) - sender wants to reset these incoming streams
+    IncomingReset { stream_ids: Vec<u16> },
+    /// Re-configuration Response (param type 16)
+    ResetResponse { result: u32, seq_number: u32 },
+}
+
+impl SctpEvent {
+    fn stream_ids_str(&self) -> String {
+        match self {
+            SctpEvent::OutgoingReset { stream_ids } | SctpEvent::IncomingReset { stream_ids } => {
+                stream_ids
+                    .iter()
+                    .map(|id| id.to_string())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            }
+            SctpEvent::ResetResponse { .. } => "-".to_string(),
+        }
+    }
+
+    fn description(&self) -> String {
+        match self {
+            SctpEvent::OutgoingReset { .. } => {
+                format!("SCTP Outgoing Reset [{}]", self.stream_ids_str())
+            }
+            SctpEvent::IncomingReset { .. } => {
+                format!("SCTP Incoming Reset [{}]", self.stream_ids_str())
+            }
+            SctpEvent::ResetResponse { result, seq_number } => {
+                let result_str = match result {
+                    0 => "Success (Nothing to do)",
+                    1 => "Success (Performed)",
+                    2 => "Denied",
+                    3 => "Error (Wrong SSN)",
+                    4 => "Error (Request In Progress)",
+                    5 => "Error (Bad Sequence Number)",
+                    6 => "In Progress",
+                    _ => "Unknown",
+                };
+                format!("SCTP Reset Response: {} (seq={})", result_str, seq_number)
+            }
+        }
+    }
+}
+
 #[derive(Debug)]
 struct Message {
     packet_number: u64,
@@ -96,6 +145,7 @@ struct Message {
     protocol: Option<String>,
     payload: Option<Vec<u8>>,
     payload_len: usize,
+    sctp_event: Option<SctpEvent>,
 }
 
 fn main() -> Result<()> {
@@ -112,7 +162,12 @@ fn main() -> Result<()> {
     let mut filtered_messages: Vec<_> = if args.all_messages {
         messages
     } else {
-        messages.into_iter().filter(|m| m.flag.is_some()).collect()
+        messages
+            .into_iter()
+            .filter(|m| {
+                m.flag.is_some() || (args.analyze_payload && m.sctp_event.is_some())
+            })
+            .collect()
     };
 
     // Apply payload size filter if specified
@@ -319,6 +374,114 @@ fn parse_sctp_packet_with_sender(
             }
         }
 
+        // Process RE-CONFIG chunks (type = 130) per RFC 6525
+        // These carry stream reset requests/responses for closing SCTP streams
+        if chunk_type == 130 {
+            let chunk_end = offset + chunk_length;
+            let mut param_offset = offset + 4; // Skip chunk header (type, flags, length)
+
+            while param_offset + 4 <= chunk_end {
+                let param_type =
+                    u16::from_be_bytes([data[param_offset], data[param_offset + 1]]);
+                let param_length =
+                    u16::from_be_bytes([data[param_offset + 2], data[param_offset + 3]]) as usize;
+
+                if param_length < 4 || param_offset + param_length > chunk_end {
+                    break;
+                }
+
+                match param_type {
+                    // Outgoing SSN Reset Request Parameter
+                    // Format: type(2) + length(2) + req_seq(4) + resp_seq(4) + last_tsn(4) + stream_ids(2*N)
+                    13 if param_length >= 16 => {
+                        let mut stream_ids = Vec::new();
+                        let mut sid_offset = param_offset + 16;
+                        while sid_offset + 2 <= param_offset + param_length {
+                            let sid = u16::from_be_bytes([data[sid_offset], data[sid_offset + 1]]);
+                            stream_ids.push(sid);
+                            sid_offset += 2;
+                        }
+
+                        let display_stream_id = stream_ids.first().copied().unwrap_or(0);
+                        messages.push(Message {
+                            packet_number,
+                            timestamp,
+                            sender,
+                            stream_id: display_stream_id,
+                            flag: None,
+                            protocol: None,
+                            payload: None,
+                            payload_len: 0,
+                            sctp_event: Some(SctpEvent::OutgoingReset {
+                                stream_ids,
+                            }),
+                        });
+                    }
+                    // Incoming SSN Reset Request Parameter
+                    // Format: type(2) + length(2) + req_seq(4) + stream_ids(2*N)
+                    14 if param_length >= 8 => {
+                        let mut stream_ids = Vec::new();
+                        let mut sid_offset = param_offset + 8;
+                        while sid_offset + 2 <= param_offset + param_length {
+                            let sid = u16::from_be_bytes([data[sid_offset], data[sid_offset + 1]]);
+                            stream_ids.push(sid);
+                            sid_offset += 2;
+                        }
+
+                        let display_stream_id = stream_ids.first().copied().unwrap_or(0);
+                        messages.push(Message {
+                            packet_number,
+                            timestamp,
+                            sender,
+                            stream_id: display_stream_id,
+                            flag: None,
+                            protocol: None,
+                            payload: None,
+                            payload_len: 0,
+                            sctp_event: Some(SctpEvent::IncomingReset {
+                                stream_ids,
+                            }),
+                        });
+                    }
+                    // Re-configuration Response Parameter
+                    // Format: type(2) + length(2) + resp_seq(4) + result(4) [+ sender_next_tsn(4) + receiver_next_tsn(4)]
+                    16 if param_length >= 12 => {
+                        let seq_number = u32::from_be_bytes([
+                            data[param_offset + 4],
+                            data[param_offset + 5],
+                            data[param_offset + 6],
+                            data[param_offset + 7],
+                        ]);
+                        let result = u32::from_be_bytes([
+                            data[param_offset + 8],
+                            data[param_offset + 9],
+                            data[param_offset + 10],
+                            data[param_offset + 11],
+                        ]);
+
+                        messages.push(Message {
+                            packet_number,
+                            timestamp,
+                            sender,
+                            stream_id: 0,
+                            flag: None,
+                            protocol: None,
+                            payload: None,
+                            payload_len: 0,
+                            sctp_event: Some(SctpEvent::ResetResponse {
+                                result,
+                                seq_number,
+                            }),
+                        });
+                    }
+                    _ => {}
+                }
+
+                // Parameters are padded to 4-byte boundary
+                param_offset += (param_length + 3) & !3;
+            }
+        }
+
         // Move to next chunk (chunks are padded to 4-byte boundary)
         offset += (chunk_length + 3) & !3;
     }
@@ -387,6 +550,7 @@ fn decode_webrtc_messages(
                 protocol,
                 payload,
                 payload_len,
+                sctp_event: None,
             });
         }
 
@@ -534,11 +698,18 @@ fn display_table(messages: &[Message], show_all: bool, total_packets: u64, args:
             .map(|p| p.as_str())
             .unwrap_or("-");
 
+        // For SCTP events, show the target stream IDs instead of the message's stream_id
+        let stream_id_str = if let Some(ref event) = msg.sctp_event {
+            event.stream_ids_str()
+        } else {
+            msg.stream_id.to_string()
+        };
+
         let mut row = vec![
             msg.packet_number.to_string(),
             msg.timestamp.format("%Y-%m-%d %H:%M:%S%.3f").to_string(),
             msg.sender.to_string(),
-            msg.stream_id.to_string(),
+            stream_id_str,
             flag_str,
             protocol_str.to_string(),
         ];
@@ -547,7 +718,9 @@ fn display_table(messages: &[Message], show_all: bool, total_packets: u64, args:
             row.push(msg.payload_len.to_string());
 
             if args.analyze_payload {
-                let analysis = if let Some(ref payload) = msg.payload {
+                let analysis = if let Some(ref event) = msg.sctp_event {
+                    event.description()
+                } else if let Some(ref payload) = msg.payload {
                     analyze_payload(payload)
                 } else {
                     "No payload".to_string()
@@ -620,12 +793,19 @@ fn write_csv(messages: &[Message], input_path: &PathBuf, args: &Args) -> Result<
             .map(|p| escape_csv_field(p))
             .unwrap_or_else(|| String::new());
 
+        // For SCTP events, show the target stream IDs instead of the message's stream_id
+        let stream_id_str = if let Some(ref event) = msg.sctp_event {
+            escape_csv_field(&event.stream_ids_str())
+        } else {
+            msg.stream_id.to_string()
+        };
+
         let mut row = format!(
             "{},{},{},{},{},{}",
             msg.packet_number,
             msg.timestamp.format("%Y-%m-%d %H:%M:%S%.3f"),
             msg.sender,
-            msg.stream_id,
+            stream_id_str,
             flag_str,
             protocol_str
         );
@@ -634,7 +814,9 @@ fn write_csv(messages: &[Message], input_path: &PathBuf, args: &Args) -> Result<
             row.push_str(&format!(",{}", msg.payload_len));
 
             if args.analyze_payload {
-                let analysis = if let Some(ref payload) = msg.payload {
+                let analysis = if let Some(ref event) = msg.sctp_event {
+                    escape_csv_field(&event.description())
+                } else if let Some(ref payload) = msg.payload {
                     escape_csv_field(&analyze_payload(payload))
                 } else {
                     "No payload".to_string()
